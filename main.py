@@ -1,11 +1,27 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+import logging
+import time
 from contextlib import asynccontextmanager
 
-from app.database import create_db_and_tables
-from app.routers import usuarios, peliculas, favoritos
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
-# TODO: Importar la configuración desde app.config
+from musica_api.config import get_settings
+from musica_api.database import create_db_and_tables
+from musica_api.routers import (
+    canciones_router,
+    favoritos_anidados_router,
+    favoritos_router,
+    usuarios_router,
+)
+
+settings = get_settings()
+
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger("api_musica")
 
 
 @asynccontextmanager
@@ -17,20 +33,19 @@ async def lifespan(app: FastAPI):
     # Startup: Crear tablas en la base de datos
     create_db_and_tables()
     yield
-    
+
     # Shutdown: Limpiar recursos si es necesario
-    print("cerrando aplicación...")
+    print("Cerrando aplicación...")
 
 
 # Crear la instancia de FastAPI con metadatos apropiados
 # Incluir: title, description, version, contact, license_info
 app = FastAPI(
-    title="API de Películas",
-    description="API RESTful para gestionar usuarios, películas y favoritos",
+    title="API de Música",
+    description="API RESTful para gestionar usuarios, canciones y favoritos",
     version="1.0.0",
     lifespan=lifespan,
     # TODO: Agregar información de contacto y licencia
-
 )
 
 
@@ -45,9 +60,33 @@ app.add_middleware(
 )
 
 
-# TODO: Incluir los routers de usuarios, canciones y favoritos
-# Ejemplo:
-# app.include_router(usuarios.router, prefix="/api/usuarios", tags=["Usuarios"])
+# Middleware de logging de requests (S9)
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Loggea cada request entrante y response saliente con tiempo de respuesta."""
+    start_time = time.time()
+    client_host = request.client.host if request.client else "unknown"
+
+    logger.info(f"→ {request.method} {request.url.path} - Client: {client_host}")
+
+    try:
+        response = await call_next(request)
+        duration_ms = (time.time() - start_time) * 1000
+        logger.info(
+            f"← {request.method} {request.url.path} - {response.status_code} - {duration_ms:.1f}ms"
+        )
+        return response
+    except Exception as e:
+        duration_ms = (time.time() - start_time) * 1000
+        logger.error(f"✗ {request.method} {request.url.path} - ERROR - {duration_ms:.1f}ms - {e}")
+        raise
+
+
+# Registrar routers
+app.include_router(usuarios_router)
+app.include_router(canciones_router)
+app.include_router(favoritos_router)
+app.include_router(favoritos_anidados_router)
 
 
 # Crear un endpoint raíz que retorne información básica de la API
@@ -58,7 +97,19 @@ async def root():
     Retorna información básica y enlaces a la documentación.
     """
     return {
-        # TODO: Agregar información 
+        "nombre": "API de Música",
+        "version": "1.0.0",
+        "descripcion": "API RESTful para gestionar usuarios, canciones y favoritos",
+        "documentacion": {
+            "swagger_ui": "/docs",
+            "redoc": "/redoc",
+        },
+        "endpoints": {
+            "usuarios": "/api/usuarios",
+            "canciones": "/api/canciones",
+            "favoritos": "/api/favoritos",
+            "favoritos_usuario": "/api/usuarios/{id}/favoritos",
+        },
     }
 
 
@@ -69,24 +120,28 @@ async def health_check():
     Health check endpoint para verificar el estado de la API.
     Útil para sistemas de monitoreo y orquestación.
     """
+    from sqlmodel import text
+
+    from musica_api.database import engine
+
+    # Verificar conexión a BD
+    db_status = "ok"
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception:
+        db_status = "error"
+
     return {
         "status": "healthy",
-        # TODO: Agregar verificación de conexión a base de datos
-        # TODO: Agregar información sobre el sistema (uptime, memoria, etc.)
+        "database": db_status,
+        "version": "1.0.0",
     }
-
-
-# TODO: Opcional - Agregar middleware para logging de requests
-
-
-# TODO: Opcional - Agregar manejadores de errores personalizados
 
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         # TODO: Configurar el servidor uvicorn con los parámetros apropiados
     )
-
-
