@@ -133,6 +133,11 @@ ENV/
 env.bak/
 venv.bak/
 
+# Project-specific
+musica.db
+odd/
+
+
 # Spyder project settings
 .spyderproject
 .spyproject
