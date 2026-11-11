@@ -36,7 +36,7 @@ export function Navbar({ active = "home" }: NavbarProps) {
         </nav>
 
         <div className="nav-actions">
-          <a className="nav-login" href="#cuenta">
+          <a className="nav-login" href="/#cuenta">
             Iniciar sesión
           </a>
           <a className="nav-primary" href="/canciones">
