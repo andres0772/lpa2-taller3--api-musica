@@ -4,9 +4,11 @@ Configuración de base de datos para la API de Música.
 Maneja la conexión, sesiones y creación de tablas usando SQLModel/SQLAlchemy.
 """
 
+import logging
 from collections.abc import Generator
 from contextlib import contextmanager
 
+from sqlalchemy import inspect
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -39,6 +41,35 @@ def create_db_and_tables() -> None:
     Se llama al iniciar la aplicación (lifespan en main.py).
     """
     SQLModel.metadata.create_all(engine)
+    ensure_schema(engine)
+
+
+# Columnas agregadas después de la primera versión, para migraciones aditivas.
+# create_all crea tablas nuevas pero NO altera tablas existentes.
+COLUMNAS_NUEVAS: dict[str, list[tuple[str, str]]] = {
+    "usuario": [("password_hash", "TEXT")],
+}
+
+
+def ensure_schema(motor=engine) -> None:
+    """
+    Migración aditiva idempotente: agrega columnas nuevas y tablas ausentes
+    sin borrar datos. Segura para correr en cada arranque.
+    """
+    inspector = inspect(motor)
+
+    for tabla, columnas in COLUMNAS_NUEVAS.items():
+        if not inspector.has_table(tabla):
+            continue
+        existentes = {col["name"] for col in inspector.get_columns(tabla)}
+        for nombre, tipo in columnas:
+            if nombre not in existentes:
+                with motor.begin() as conexion:
+                    conexion.exec_driver_sql(f"ALTER TABLE {tabla} ADD COLUMN {nombre} {tipo}")
+                logger_migracion = logging.getLogger("api_musica.database")
+                logger_migracion.info(f"Migración: columna {tabla}.{nombre} agregada")
+
+    SQLModel.metadata.create_all(motor)
 
 
 def get_session() -> Generator[Session]:
