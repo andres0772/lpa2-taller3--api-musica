@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import { useAudioWaveform } from "@/hooks/useAudioWaveform";
 import {
@@ -84,8 +85,10 @@ export default function Home() {
     try {
       await crearFavorito(DEMO_USER_ID, featured.id);
       setFavoriteState("saved");
+      toast.success("Canción guardada en favoritos");
     } catch {
       setFavoriteState("error");
+      toast.error("No pudimos guardar la canción");
     }
   }
 

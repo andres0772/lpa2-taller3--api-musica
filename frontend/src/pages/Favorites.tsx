@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import { useAudioWaveform } from "@/hooks/useAudioWaveform";
 import {
@@ -91,11 +92,19 @@ export default function Favorites() {
 
     audioRef.current?.pause();
     detenerWaveform();
-    await quitarFavorito(DEMO_USER_ID, selected.song.id);
+
+    try {
+      await quitarFavorito(DEMO_USER_ID, selected.song.id);
+    } catch {
+      toast.error("No pudimos quitar la canción");
+      return;
+    }
+
     const remaining = tracks.filter(({ song }) => song.id !== selected.song.id);
     setTracks(remaining);
     setSelectedId(remaining[0]?.song.id ?? null);
     setIsPlaying(false);
+    toast.success("Canción quitada de favoritos");
   }
 
   return (

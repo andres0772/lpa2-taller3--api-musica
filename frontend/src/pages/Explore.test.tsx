@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Explore from "@/pages/Explore";
+import { AppToaster } from "@/components/AppToaster";
 
 const canciones = [
   {
@@ -59,6 +60,9 @@ function mockApi(options: {
     if (method === "POST" && url.includes("/api/usuarios/1/favoritos/1")) {
       return { ok: true, json: async () => ({ id: 99, id_usuario: 1, id_cancion: 1 }) } as Response;
     }
+    if (method === "DELETE" && url.includes("/api/usuarios/1/favoritos/1")) {
+      return { ok: true, status: 204, json: async () => undefined } as Response;
+    }
     if (url.includes("/api/canciones/buscar")) {
       return { ok: true, json: async () => options.buscar ?? songs } as Response;
     }
@@ -74,6 +78,26 @@ function mockApi(options: {
 describe("Explore", () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("confirms favorites changes with toasts", async () => {
+    const fetchMock = mockApi();
+
+    render(
+      <>
+        <Explore />
+        <AppToaster />
+      </>,
+    );
+    await screen.findByRole("heading", { name: "Bohemian Rhapsody" });
+
+    fireEvent.click(screen.getByRole("button", { name: 'Guardar "Bohemian Rhapsody" en favoritos' }));
+    expect(await screen.findByText("Canción guardada en favoritos")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: 'Quitar "Bohemian Rhapsody" de favoritos' }));
+    expect(await screen.findByText("Canción quitada de favoritos")).toBeInTheDocument();
+
+    expect(fetchMock.mock.calls.some((call) => (call[1] as RequestInit | undefined)?.method === "DELETE")).toBe(true);
   });
 
   it("lists the catalog from the API", async () => {

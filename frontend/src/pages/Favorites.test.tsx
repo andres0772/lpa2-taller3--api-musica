@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Favorites from "@/pages/Favorites";
+import { AppToaster } from "@/components/AppToaster";
 
 const usuario = {
   id: 1,
@@ -213,6 +214,33 @@ describe("Favorites", () => {
       "data-live",
       "false",
     );
+  });
+
+  it("confirms removing the selected favorite with a toast", async () => {
+    stubWebAudio();
+    mockFavorites([
+      {
+        id: 7,
+        id_usuario: 1,
+        id_cancion: 2,
+        fecha_marcado: "2024-04-01T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+    ]);
+
+    render(
+      <>
+        <Favorites />
+        <AppToaster />
+      </>,
+    );
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Quitar de favoritos" }),
+    );
+
+    expect(await screen.findByText("Canción quitada de favoritos")).toBeInTheDocument();
   });
 
   it("shows and plays saved music in the luminous archive", async () => {

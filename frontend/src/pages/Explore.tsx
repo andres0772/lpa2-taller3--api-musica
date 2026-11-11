@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import {
   buscarCanciones,
@@ -33,7 +34,6 @@ export default function Explore() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [favoritas, setFavoritas] = useState<number[]>([]);
   const [pendingFavorite, setPendingFavorite] = useState<number | null>(null);
-  const [favoriteError, setFavoriteError] = useState<number | null>(null);
 
   const cargar = useCallback(async () => {
     setStatus("loading");
@@ -79,19 +79,18 @@ export default function Explore() {
   }
 
   async function toggleFavorito(song: Cancion) {
-    setPendingFavorite(song.id);
-    setFavoriteError(null);
-
     try {
       if (favoritas.includes(song.id)) {
         await quitarFavorito(DEMO_USER_ID, song.id);
         setFavoritas((previas) => previas.filter((id) => id !== song.id));
+        toast.success("Canción quitada de favoritos");
       } else {
         await crearFavorito(DEMO_USER_ID, song.id);
         setFavoritas((previas) => [...previas, song.id]);
+        toast.success("Canción guardada en favoritos");
       }
     } catch {
-      setFavoriteError(song.id);
+      toast.error("No pudimos actualizar favoritos");
     } finally {
       setPendingFavorite(null);
     }
@@ -218,11 +217,6 @@ export default function Explore() {
                       {guardada ? "Guardada" : "Guardar en favoritos"}
                     </button>
                   </div>
-                  {favoriteError === song.id && (
-                    <p className="song-favorite-error" role="status">
-                      No se pudo actualizar favoritos.
-                    </p>
-                  )}
                 </li>
               );
             })}

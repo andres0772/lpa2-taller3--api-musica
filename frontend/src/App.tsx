@@ -1,19 +1,23 @@
 import Home from "@/pages/Home";
 import Explore from "@/pages/Explore";
 import Favorites from "@/pages/Favorites";
+import { AppToaster } from "@/components/AppToaster";
 
 function App() {
   const path = window.location.pathname;
 
-  if (path.startsWith("/favoritos")) {
-    return <Favorites />;
-  }
-
-  if (path.startsWith("/canciones")) {
-    return <Explore />;
-  }
-
-  return <Home />;
+  return (
+    <>
+      {path.startsWith("/favoritos") ? (
+        <Favorites />
+      ) : path.startsWith("/canciones") ? (
+        <Explore />
+      ) : (
+        <Home />
+      )}
+      <AppToaster />
+    </>
+  );
 }
 
 export default App;

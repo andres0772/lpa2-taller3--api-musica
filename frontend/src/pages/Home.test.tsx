@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import { fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Home from "@/pages/Home";
+import { AppToaster } from "@/components/AppToaster";
 
 const canciones = [
   {
@@ -214,6 +215,33 @@ describe("Home", () => {
     expect(
       screen.getByRole("button", { name: "Reproducir Billie Jean" }),
     ).toBeInTheDocument();
+  });
+
+  it("confirms saving the featured song with a toast", async () => {
+    const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      if (init?.method === "POST") {
+        return { ok: true, json: async () => ({ id: 99 }) } as Response;
+      }
+      if (url.includes("/api/canciones")) {
+        return { ok: true, json: async () => canciones } as Response;
+      }
+      return { ok: true, json: async () => ({}) } as Response;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <>
+        <Home />
+        <AppToaster />
+      </>,
+    );
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Guardar en favoritos" }),
+    );
+
+    expect(await screen.findByText("Canción guardada en favoritos")).toBeInTheDocument();
   });
 
   it("renders the cinematic landing experience", async () => {
