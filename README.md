@@ -99,7 +99,7 @@ lpa2-taller3
 
 ## Frontend
 
-El frontend es una SPA construida con React, TypeScript, Vite y Tailwind CSS. Actualmente contiene la landing page visual y usa datos locales de demostración; todavía no está conectado a la API.
+El frontend es una SPA construida con React, TypeScript, Vite y Tailwind CSS. Contiene una portada cinematográfica y una vista de favoritos con composición luminosa. Se conecta a la API FastAPI para consultar el catálogo y los favoritos del usuario demo, y conserva un catálogo local como fallback de la portada.
 
 ### Instalación
 

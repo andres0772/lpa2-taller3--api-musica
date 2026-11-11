@@ -1,6 +1,6 @@
 # Frontend de YourMusic
 
-SPA de la landing page de **YourMusic**, construida con React, TypeScript y Vite.
+SPA de **YourMusic** con una portada cinematográfica y un archivo luminoso de favoritos, construida con React, TypeScript y Vite.
 
 ## Stack
 
@@ -12,12 +12,7 @@ SPA de la landing page de **YourMusic**, construida con React, TypeScript y Vite
 - Lucide React
 - Sonner
 - Vitest + React Testing Library + jsdom
-- Playwright para el smoke test en Chromium
-
-## Requisitos
-
-- Node.js `^20.19.0 || >=22.12.0`
-- npm 10 o superior
+- Playwright para los smoke tests en Chromium
 
 ## Instalación
 
@@ -33,6 +28,17 @@ npm run dev
 ```
 
 La aplicación queda disponible en `http://localhost:5173`.
+
+- Portada: `http://localhost:5173/`
+- Favoritos: `http://localhost:5173/favoritos`
+
+La interfaz consume por defecto la API en `http://127.0.0.1:8000`. Para usar otra dirección:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8000 npm run dev
+```
+
+La portada conserva un catálogo demo local si la API no está disponible. La vista de favoritos muestra un estado de error explícito y permite reintentar.
 
 ## Verificación
 
@@ -61,14 +67,21 @@ npm run preview
 
 ```text
 src/
-├── components/  # Navbar, video, marquee y tarjeta glass
-├── pages/       # Landing page
-├── test/        # Configuración global de Testing Library
+├── api/          # Cliente de usuarios, canciones y favoritos
+├── components/   # Navegación compartida
+├── data/         # Catálogo demo local
+├── pages/        # Portada y favoritos
+├── styles/       # Composición cinematográfica y luminosa
+├── test/         # Configuración global de Testing Library
 ├── App.tsx
 ├── index.css
 └── main.tsx
 ```
 
-## Estado actual
+## Comportamiento actual
 
-La interfaz utiliza datos locales de demostración y todavía no está conectada a la API FastAPI. La integración, el manejo de estados asíncronos y la autenticación se implementarán en unidades posteriores.
+- La portada consume `GET /api/canciones` y usa el catálogo demo como fallback.
+- La vista de favoritos consume `GET /api/usuarios/1` y `GET /api/usuarios/1/favoritos`.
+- Las canciones guardadas se resuelven mediante `GET /api/canciones/{id}` cuando el endpoint de favoritos no incluye la relación completa.
+- El reproductor usa `archivo_audio` cuando la API loprovee. Las canciones seed actuales no tienen archivo de audio, por lo que la interfaz informa esa ausencia en lugar de simular sonido.
+- La autenticación todavía no está implementada; el frontend usa el usuario demo `id=1`.
