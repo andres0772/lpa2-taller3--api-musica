@@ -32,6 +32,7 @@ La aplicación queda disponible en `http://localhost:5173`.
 - Portada: `http://localhost:5173/`
 - Exploración del catálogo: `http://localhost:5173/canciones`
 - Favoritos: `http://localhost:5173/favoritos`
+- Cuenta: `http://localhost:5173/login`
 
 La interfaz consume por defecto la API en `http://127.0.0.1:8000`. Para usar otra dirección:
 
@@ -71,7 +72,8 @@ src/
 ├── api/          # Cliente de usuarios, canciones y favoritos
 ├── components/   # Navegación compartida
 ├── data/         # Catálogo demo local
-├── pages/        # Portada, exploración y favoritos
+├── pages/        # Portada, exploración, favoritos y login
+├── hooks/        # Sesión de usuario y waveform del audio
 ├── styles/       # Composición cinematográfica y luminosa
 ├── test/         # Configuración global de Testing Library
 ├── App.tsx
@@ -83,6 +85,8 @@ src/
 
 - La portada consume `GET /api/canciones` y usa el catálogo demo como fallback.
 - La vista de exploración consume `GET /api/canciones` paginado y `GET /api/canciones/buscar` con los filtros de título/artista y género; permite guardar o quitar favoritos por canción.
+- La sesión usa `POST /api/auth/registro|login`, `GET /api/auth/me` y `POST /api/auth/logout`; el token se guarda en `localStorage` y viaja en `X-Session-Token`. Sin sesión, los favoritos usan el usuario demo `id=1`; con sesión, el usuario real.
+- Los reproductores usan `archivo_audio` resuelto contra el origen de la API (`audioUrl`) con `crossOrigin="anonymous"`, y la barra de sonido se alimenta del audio real vía Web Audio, con fallback decorativo.
 - Las tarjetas editoriales de la portada seleccionan la canción destacada del reproductor en lugar de usar anclas inexistentes.
 - Los discos giran y los waveform se animan solo mientras hay audio en reproducción; toda la animación usa `transform`/`opacity` y respeta `prefers-reduced-motion`.
 - La vista de favoritos consume `GET /api/usuarios/1` y `GET /api/usuarios/1/favoritos`.

@@ -11,7 +11,21 @@ const cancion = {
   año: 1971,
   genero: "Rock",
   fecha_creacion: "2024-01-22T10:30:00Z",
-  archivo_audio: "/audio/stairway.mp3",
+  archivo_audio: "/audio/02-stairway-to-heaven.mp3",
+};
+
+const cancionDos = {
+  id: 8,
+  titulo: "Take Five",
+  artista: "Dave Brubeck",
+  album: "Time Out",
+  duracion: "5:24",
+  duracion_segundos: 324,
+  duracion_formato: "5:24",
+  año: 1959,
+  genero: "Jazz",
+  fecha_creacion: "2024-04-01T10:00:00Z",
+  archivo_audio: "/audio/08-take-five.mp3",
 };
 
 const usuario = {
@@ -19,6 +33,13 @@ const usuario = {
   nombre: "Juan Pérez",
   correo: "juan.perez@email.com",
   fecha_registro: "2024-01-15T10:30:00Z",
+};
+
+const USUARIO_SESION = {
+  id: 9,
+  nombre: "Ana Demo",
+  correo: "ana@example.com",
+  fecha_registro: "2024-05-01T10:00:00Z",
 };
 
 test("loads the cinematic YourMusic landing page without browser errors", async ({
@@ -48,10 +69,9 @@ test("loads the cinematic YourMusic landing page without browser errors", async 
       name: "Tu banda sonora en movimiento.",
     }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Favoritos" })).toHaveAttribute(
-    "href",
-    "/favoritos",
-  );
+  await expect(
+    page.getByRole("link", { name: "Favoritos", exact: true }),
+  ).toHaveAttribute("href", "/favoritos");
   await expect(page.locator("video")).toHaveCount(0);
   await expect(page.locator("body")).toHaveCSS(
     "background-color",
@@ -96,6 +116,132 @@ test("opens saved music in the luminous favorites view", async ({ page }) => {
   ).toBeEnabled();
   await expect(page.locator("audio")).toHaveAttribute(
     "src",
-    "/audio/stairway.mp3",
+    "http://127.0.0.1:8000/audio/02-stairway-to-heaven.mp3",
   );
+});
+
+test("explores the catalog with debounced search and filter deep links", async ({
+  page,
+}) => {
+  const busquedas: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/canciones/buscar")) {
+      busquedas.push(request.url());
+    }
+  });
+  await page.route("**/api/canciones/buscar**", async (route) => {
+    await route.fulfill({ json: [cancionDos] });
+  });
+  await page.route("**/api/canciones**", async (route) => {
+    await route.fulfill({ json: [cancion, cancionDos] });
+  });
+
+  await page.goto("/canciones?q=led+zeppelin&genero=Rock");
+
+  await expect(page.getByLabel("Buscar por título o artista")).toHaveValue(
+    "led zeppelin",
+  );
+  await expect(page.getByLabel("Género")).toHaveValue("Rock");
+  await expect(page.getByRole("heading", { name: "Take Five" })).toBeVisible();
+
+  // Escribir varios caracteres colapsa en un solo request (debounce 300ms).
+  busquedas.length = 0;
+  await page.getByLabel("Buscar por título o artista").fill("brubeck");
+  await expect
+    .poll(() => busquedas.length, { timeout: 3000 })
+    .toBe(1);
+  expect(busquedas[0]).toContain("titulo=brubeck");
+  await expect.poll(() => new URL(page.url()).search).toContain("q=brubeck");
+});
+
+test("shows loading skeletons before the catalog arrives", async ({ page }) => {
+  await page.route("**/api/canciones**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await route.fulfill({ json: [] });
+  });
+
+  await page.goto("/canciones");
+
+  await expect(page.locator(".song-skeleton")).toHaveCount(6);
+  await expect(page.getByText(/no encontramos canciones/i)).toBeVisible({
+    timeout: 3000,
+  });
+  await expect(page.locator(".song-skeleton")).toHaveCount(0);
+});
+
+test("registers, scopes favorites to the session user and logs out", async ({
+  page,
+}) => {
+  const favoritosUsuario: string[] = [];
+  page.on("request", (request) => {
+    const url = request.url();
+    if (url.includes("/api/")) {
+      favoritosUsuario.push(`${request.method()} ${url.replace("http://127.0.0.1:8000", "")}`);
+    }
+  });
+
+  await page.route("**/api/auth/registro", async (route) => {
+    await route.fulfill({ status: 201, json: USUARIO_SESION });
+  });
+  await page.route("**/api/auth/login", async (route) => {
+    await route.fulfill({
+      json: { token: "tok-e2e", usuario: USUARIO_SESION },
+    });
+  });
+  await page.route("**/api/auth/logout", async (route) => {
+    await route.fulfill({ status: 204, body: "" });
+  });
+  await page.route("**/api/auth/me", async (route) => {
+    await route.fulfill({ json: USUARIO_SESION });
+  });
+  await page.route("**/api/usuarios/9", async (route) => {
+    await route.fulfill({ json: USUARIO_SESION });
+  });
+  await page.route("**/api/usuarios/9/favoritos**", async (route) => {
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        status: 201,
+        json: { id: 55, id_usuario: 9, id_cancion: 8 },
+      });
+      return;
+    }
+    await route.fulfill({ json: [] });
+  });
+  await page.route("**/api/canciones**", async (route) => {
+    await route.fulfill({ json: [cancion, cancionDos] });
+  });
+
+  await page.goto("/login");
+  await page.getByRole("button", { name: "Crear cuenta" }).click();
+  await page.getByLabel("Nombre").fill("Ana Demo");
+  await page.getByLabel("Correo").fill("ana@example.com");
+  await page.getByLabel("Contraseña").fill("secretito-2024");
+  await page.getByRole("button", { name: "Crear cuenta" }).click();
+
+  await expect(page.getByText("Hola, Ana Demo")).toBeVisible();
+
+  // Los favoritos se piden al usuario de la sesión, no al demo.
+  await page.getByRole("link", { name: "Favoritos", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Stairway to Heaven" }).or(
+      page.getByText(/todavía está en silencio/i),
+    ),
+  ).toBeVisible();
+  await expect
+    .poll(() => favoritosUsuario.some((url) => url.includes("/api/usuarios/9/")), {
+      timeout: 5000,
+    })
+    .toBe(true);
+  expect(favoritosUsuario.some((url) => url.includes("/api/usuarios/1/"))).toBe(
+    false,
+  );
+
+  await page.getByRole("link", { name: "Canciones" }).click();
+  await page
+    .getByRole("button", { name: 'Guardar "Take Five" en favoritos' })
+    .click();
+  await expect(page.getByText("Canción guardada en favoritos")).toBeVisible();
+
+  await page.getByRole("button", { name: "Salir" }).click();
+  await expect(page.getByRole("link", { name: "Iniciar sesión" })).toBeVisible();
 });

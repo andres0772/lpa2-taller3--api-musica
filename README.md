@@ -158,6 +158,24 @@ Las instrucciones completas del frontend están en [`frontend/README.md`](fronte
 - **Marcar favorito específico**: `POST /api/usuarios/{id_usuario}/favoritos/{id_cancion}`
 - **Eliminar favorito específico**: `DELETE /api/usuarios/{id_usuario}/favoritos/{id_cancion}`
 
+### Autenticación
+
+Sesiones con token opaco. La contraseña se guarda solo como hash PBKDF2 y el
+solo viaja en el header `X-Session-Token`. Los usuarios del seed no tienen
+contraseña: hay que registrarse (o asignar una) para poder entrar.
+
+- **Registrar usuario**: `POST /api/auth/registro` con `{"nombre", "correo", "contraseña"}` (409 si el correo ya existe)
+- **Iniciar sesión**: `POST /api/auth/login` con `{"correo", "contraseña"}` → `{"token", "usuario"}`
+- **Usuario actual**: `GET /api/auth/me` con `X-Session-Token`
+- **Cerrar sesión**: `POST /api/auth/logout` con `X-Session-Token` (204)
+
+### Audio de demostración
+
+Cada canción del seed referencia un extracto servido por la propia API en
+`GET /audio/<slug>.mp3`. Los archivos se generan con el script determinista
+`scripts/generate_demo_audio.py` (ffmpeg, tonos sintetizados, sin material con
+copyright) y quedan en `media/audio/`.
+
 ## Desarrollo del Taller
 
 1. Ajustar este `README.md` con los datos del Estudiante
