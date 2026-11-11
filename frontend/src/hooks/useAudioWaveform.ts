@@ -36,6 +36,21 @@ export function useAudioWaveform(
   const analizadorRef = useRef<AnalyserNode | null>(null);
   const frameRef = useRef<number | null>(null);
 
+  // El contexto se crea al montar (barato y sin gesto): en el click solo
+  // queda conectarlo y resumirlo, que es lo que produce el tirón inicial.
+  useEffect(() => {
+    const ConstructorAudio =
+      (window as VentanaConWebAudio).AudioContext ??
+      (window as VentanaConWebAudio).webkitAudioContext;
+    if (ConstructorAudio) {
+      contextoRef.current = new ConstructorAudio();
+    }
+    return () => {
+      contextoRef.current?.close().catch(() => undefined);
+      contextoRef.current = null;
+    };
+  }, []);
+
   const limpiarBarras = useCallback(() => {
     const barras = waveRef.current?.querySelectorAll("i");
     barras?.forEach((barra) => {
@@ -94,8 +109,7 @@ export function useAudioWaveform(
 
     try {
       const contexto = (contextoRef.current ??= new ConstructorAudio());
-      const fuente = fuentes.get(audio) ?? contexto.createMediaElementSource(audio);
-      fuentes.set(audio, fuente);
+      const fuente = fuentes.get(audio) ?? contexto.createMediaElementSource(audio);      fuentes.set(audio, fuente);
 
       const analizador = (analizadorRef.current ??= contexto.createAnalyser());
       analizador.fftSize = 64;
@@ -137,8 +151,6 @@ export function useAudioWaveform(
         frameRef.current = null;
       }
       analizadorRef.current?.disconnect();
-      void contextoRef.current?.close().catch(() => undefined);
-      contextoRef.current = null;
       analizadorRef.current = null;
     };
   }, []);

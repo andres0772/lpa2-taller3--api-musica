@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import { useSesion } from "@/hooks/useSesion";
 import {
+  audioUrl,
   buscarCanciones,
   crearFavorito,
   listCanciones,
@@ -40,6 +41,9 @@ export default function Explore() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [favoritas, setFavoritas] = useState<number[]>([]);
   const [pendingFavorite, setPendingFavorite] = useState<number | null>(null);
+  const [cancionActiva, setCancionActiva] = useState<number | null>(null);
+  const [reproduciendo, setReproduciendo] = useState(false);
+  const audioExplorarRef = useRef<HTMLAudioElement>(null);
 
   const cargar = useCallback(async () => {
     setStatus("loading");
@@ -135,6 +139,30 @@ export default function Explore() {
     }
   }
 
+  async function alternarCancion(song: Cancion) {
+    const audio = audioExplorarRef.current;
+    const src = audioUrl(song.archivo_audio);
+    if (!audio || !src) {
+      return;
+    }
+
+    if (cancionActiva === song.id) {
+      if (audio.paused) {
+        await audio.play();
+        setReproduciendo(true);
+      } else {
+        audio.pause();
+        setReproduciendo(false);
+      }
+      return;
+    }
+
+    setCancionActiva(song.id);
+    audio.src = src;
+    await audio.play();
+    setReproduciendo(true);
+  }
+
   return (
     <div className="cinematic-page explore-page">
       <Navbar />
@@ -213,7 +241,13 @@ export default function Explore() {
               const guardada = favoritas.includes(song.id);
 
               return (
-                <li className="song-card" key={song.id}>
+                <li
+                  className="song-card"
+                  key={song.id}
+                  data-playing={
+                    cancionActiva === song.id && reproduciendo ? "true" : "false"
+                  }
+                >
                   <span className="song-cover" aria-hidden="true">
                     {String(index + 1 + (page - 1) * PAGE_SIZE).padStart(2, "0")}
                   </span>
@@ -234,10 +268,13 @@ export default function Explore() {
                       type="button"
                       disabled={!song.archivo_audio}
                       aria-label={
-                        song.archivo_audio
-                          ? `Reproducir ${song.titulo}`
-                          : `Audio no disponible para ${song.titulo}`
+                        cancionActiva === song.id && reproduciendo
+                          ? `Pausar ${song.titulo}`
+                          : song.archivo_audio
+                            ? `Reproducir ${song.titulo}`
+                            : `Audio no disponible para ${song.titulo}`
                       }
+                      onClick={() => void alternarCancion(song)}
                     >
                       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M8 5v14l11-7z" />
@@ -264,8 +301,7 @@ export default function Explore() {
         )}
 
         {status === "ready" && canciones.length > 0 && (
-          <nav className="explore-pagination" aria-label="Paginación del catálogo">
-            <button
+          <nav className="explore-pagination" aria-label="Paginación del catálogo">            <button
               type="button"
               disabled={page === 1}
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}
@@ -278,6 +314,16 @@ export default function Explore() {
             </button>
           </nav>
         )}
+
+        <audio
+          ref={audioExplorarRef}
+          className="explore-audio"
+          preload="none"
+          onEnded={() => {
+            setReproduciendo(false);
+            setCancionActiva(null);
+          }}
+        />
       </main>
     </div>
   );

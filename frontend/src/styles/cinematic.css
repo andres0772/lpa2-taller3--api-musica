@@ -1105,6 +1105,15 @@
   box-shadow: 0 12px 40px var(--color-bg-deep);
 }
 
+.song-card[data-playing="true"] {
+  border-color: var(--color-accent-glow);
+  box-shadow: 0 12px 40px var(--color-bg-deep), 0 0 0 1px var(--color-accent-glow);
+}
+
+.explore-audio {
+  display: none;
+}
+
 .song-cover {
   width: 46px;
   height: 46px;

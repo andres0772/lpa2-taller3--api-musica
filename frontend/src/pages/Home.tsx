@@ -196,7 +196,7 @@ export default function Home() {
                 ref={audioRef}
                 crossOrigin="anonymous"
                 src={audioUrl(featured.archivo_audio) ?? undefined}
-                preload="metadata"
+                preload="auto"
                 onEnded={() => {
                   setIsPlaying(false);
                   detenerWaveform();

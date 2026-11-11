@@ -240,7 +240,7 @@ export default function Favorites() {
                 ref={audioRef}
                 crossOrigin="anonymous"
                 src={audioUrl(selected.song.archivo_audio) ?? undefined}
-                preload="metadata"
+                preload="auto"
                 onEnded={() => {
                   setIsPlaying(false);
                   detenerWaveform();

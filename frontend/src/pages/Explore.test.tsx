@@ -105,6 +105,31 @@ describe("Explore", () => {
     expect(fetchMock.mock.calls.some((call) => (call[1] as RequestInit | undefined)?.method === "DELETE")).toBe(true);
   });
 
+  it("plays a song from the catalog with a single shared player", async () => {
+    const conAudio = canciones.map((song, index) => ({
+      ...song,
+      archivo_audio: `/audio/0${index + 1}-demo.mp3`,
+    }));
+    const fetchMock = mockApi({ canciones: conAudio });
+
+    const { container } = render(<Explore />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reproducir Bohemian Rhapsody" }),
+    );
+
+    const audio = container.querySelector(".explore-audio");
+    expect(audio).toHaveAttribute(
+      "src",
+      "http://127.0.0.1:8000/audio/01-demo.mp3",
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Pausar Bohemian Rhapsody" }),
+      ).toBeInTheDocument();
+    });
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("/api/canciones"))).toBe(true);
+  });
+
   it("lists the catalog from the API", async () => {
     const fetchMock = mockApi();
 
