@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YourMusic — Design System</title>
+    <style>
+      :root {
+        --font-sans: "Geist Variable", "Inter Variable", system-ui, sans-serif;
+        --color-bg-deep: #020617;
+        --color-bg-card: rgba(15, 23, 42, 0.72);
+        --color-bg-card-hover: rgba(30, 41, 59, 0.8);
+        --color-border-glass: rgba(148, 163, 184, 0.12);
+        --color-border-glass-hover: rgba(148, 163, 184, 0.22);
+        --color-accent-indigo: #4f46e5;
+        --color-accent-glow: #6366f1;
+        --color-accent-muted: rgba(79, 70, 229, 0.15);
+        --color-text-main: #f1f5f9;
+        --color-text-muted: #94a3b8;
+      }
+
+      * { box-sizing: border-box; }
+      :focus-visible { outline: 2px solid var(--color-accent-glow); outline-offset: 3px; }
+      body {
+        margin: 0;
+        width: 1440px;
+        min-height: 900px;
+        overflow-x: hidden;
+        background: var(--color-bg-deep);
+        color: var(--color-text-main);
+        font-family: var(--font-sans);
+      }
+      main { width: 1440px; padding: 56px 64px 72px; }
+      header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 44px; }
+      h1 { margin: 0; font-size: 48px; letter-spacing: -0.04em; }
+      header p { margin: 0 0 5px; color: var(--color-text-muted); font-size: 15px; }
+      .section { margin-top: 34px; }
+      .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+      h2 { margin: 0; font-size: 18px; letter-spacing: -0.01em; }
+      .meta { color: var(--color-text-muted); font-size: 12px; }
+      .swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+      .swatch { min-height: 116px; padding: 14px; border: 1px solid var(--color-border-glass); border-radius: 14px; background: rgba(15, 23, 42, 0.46); display: flex; flex-direction: column; justify-content: flex-end; }
+      .swatch strong { font-size: 12px; }
+      .swatch code { color: var(--color-text-muted); font-size: 10px; margin-top: 4px; }
+      .chip { height: 42px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,.08); }
+      .grid-3 { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 16px; }
+      .panel { border: 1px solid var(--color-border-glass); border-radius: 16px; background: rgba(15, 23, 42, 0.42); padding: 22px; min-height: 180px; }
+      .panel h3 { margin: 0 0 10px; font-size: 15px; }
+      .panel p { margin: 0; color: var(--color-text-muted); font-size: 13px; line-height: 1.55; }
+      .type-sample { margin-top: 16px; font-size: 38px; font-weight: 720; letter-spacing: -0.035em; }
+      .type-note { margin-top: 10px; color: var(--color-text-muted); font-size: 12px; }
+      .shadow-sample { height: 78px; margin-top: 22px; border-radius: 14px; background: var(--color-bg-card-hover); border: 1px solid var(--color-border-glass); }
+      .shadow-sample.rest { box-shadow: 0 4px 24px rgba(2, 6, 23, 0.4); }
+      .shadow-sample.hover { box-shadow: 0 12px 40px rgba(2, 6, 23, 0.5); border-color: var(--color-border-glass-hover); }
+      .glass {
+        margin-top: 18px;
+        padding: 20px;
+        border-radius: 16px;
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border-glass);
+        backdrop-filter: blur(24px) saturate(180%);
+        box-shadow: 0 4px 24px rgba(2, 6, 23, 0.4);
+      }
+      .glass strong { font-size: 17px; }
+      .glass p { margin: 7px 0 0; color: var(--color-text-muted); font-size: 13px; }
+      .token-row { display: flex; gap: 8px; margin-top: 14px; }
+      .token-row span { padding: 5px 8px; border-radius: 999px; background: var(--color-accent-muted); color: var(--color-accent-glow); font-size: 10px; }
+      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>YourMusic / System</h1>
+          <p>Source-backed tokens from frontend/src/index.css</p>
+        </div>
+        <p>1440 × 900 · current baseline</p>
+      </header>
+
+      <section class="section" aria-labelledby="colors-title">
+        <div class="section-head"><h2 id="colors-title">Color roles</h2><span class="meta">10 tokens</span></div>
+        <div class="swatches">
+          <div class="swatch"><div class="chip" style="background:#020617"></div><strong>bg-deep</strong><code>#020617</code></div>
+          <div class="swatch"><div class="chip" style="background:rgba(15,23,42,.72)"></div><strong>bg-card</strong><code>15, 23, 42 / .72</code></div>
+          <div class="swatch"><div class="chip" style="background:rgba(30,41,59,.8)"></div><strong>bg-card-hover</strong><code>30, 41, 59 / .8</code></div>
+          <div class="swatch"><div class="chip" style="background:rgba(148,163,184,.12)"></div><strong>border-glass</strong><code>148, 163, 184 / .12</code></div>
+          <div class="swatch"><div class="chip" style="background:rgba(148,163,184,.22)"></div><strong>border-hover</strong><code>148, 163, 184 / .22</code></div>
+          <div class="swatch"><div class="chip" style="background:#4f46e5"></div><strong>accent-indigo</strong><code>#4f46e5</code></div>
+          <div class="swatch"><div class="chip" style="background:#6366f1"></div><strong>accent-glow</strong><code>#6366f1</code></div>
+          <div class="swatch"><div class="chip" style="background:rgba(79,70,229,.15)"></div><strong>accent-muted</strong><code>79, 70, 229 / .15</code></div>
+          <div class="swatch"><div class="chip" style="background:#f1f5f9"></div><strong>text-main</strong><code>#f1f5f9</code></div>
+          <div class="swatch"><div class="chip" style="background:#94a3b8"></div><strong>text-muted</strong><code>#94a3b8</code></div>
+        </div>
+      </section>
+
+      <section class="section grid-3">
+        <div class="panel">
+          <h3>Typography</h3>
+          <p class="meta">--font-sans</p>
+          <div class="type-sample">Find your next sound.</div>
+          <p class="type-note">Geist Variable → Inter Variable → system-ui. Sizes and weights are not source-tokenized.</p>
+        </div>
+        <div class="panel">
+          <h3>Spacing & radius</h3>
+          <p>No spacing scale or radius token is declared in the source stylesheet. These remain proposal-level decisions until formally added to the project system.</p>
+          <div class="token-row"><span>not tokenized</span><span>use intentionally</span></div>
+        </div>
+        <div class="panel">
+          <h3>Elevation</h3>
+          <p>Resting and hover shadows are defined for glass surfaces.</p>
+          <div class="shadow-sample rest"></div>
+          <div class="shadow-sample hover"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><h2>Core component</h2><span class="meta">glass / glass-strong</span></div>
+        <div class="glass">
+          <strong>A focused listening surface</strong>
+          <p>Use glass to reveal hierarchy or interaction context—not to wrap every element in a card.</p>
+          <div class="token-row"><span>blur 24px</span><span>saturate 180%</span><span>180ms</span></div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
