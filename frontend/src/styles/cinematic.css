@@ -1253,6 +1253,37 @@
   font-variant-numeric: tabular-nums;
 }
 
+.song-skeleton {
+  min-height: 190px;
+  border: 1px solid var(--color-border-glass);
+  background: var(--color-bg-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.song-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-bg-card-hover),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: shimmer-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
 @media (max-width: 980px) {
   .explore-main {
     width: min(100% - 40px, 1360px);

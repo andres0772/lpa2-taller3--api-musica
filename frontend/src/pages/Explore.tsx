@@ -11,6 +11,7 @@ import {
 
 const DEMO_USER_ID = 1;
 const PAGE_SIZE = 12;
+const DEBOUNCE_MS = 300;
 
 // Géneros expuestos por la API (musica_api/models.py, enum Genero).
 const GENEROS = [
@@ -26,9 +27,13 @@ const GENEROS = [
 ];
 
 export default function Explore() {
-  const [texto, setTexto] = useState("");
-  const [titulo, setTitulo] = useState("");
-  const [genero, setGenero] = useState("");
+  const [texto, setTexto] = useState(
+    () => new URLSearchParams(window.location.search).get("q") ?? "",
+  );
+  const [titulo, setTitulo] = useState(texto);
+  const [genero, setGenero] = useState(
+    () => new URLSearchParams(window.location.search).get("genero") ?? "",
+  );
   const [page, setPage] = useState(1);
   const [canciones, setCanciones] = useState<Cancion[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -63,7 +68,7 @@ export default function Explore() {
   function buscar(event: React.FormEvent) {
     event.preventDefault();
     setPage(1);
-    setTitulo(texto);
+    setTitulo(texto.trim());
   }
 
   function filtrarGenero(value: string) {
@@ -77,6 +82,39 @@ export default function Explore() {
     setGenero("");
     setPage(1);
   }
+
+  // La escritura se aplica con debounce: varios keystrokes, un solo request.
+  useEffect(() => {
+    if (texto.trim() === titulo) {
+      return;
+    }
+    const temporizador = setTimeout(() => {
+      setPage(1);
+      setTitulo(texto.trim());
+    }, DEBOUNCE_MS);
+    return () => clearTimeout(temporizador);
+  }, [texto, titulo]);
+
+  // Los filtros vigentes quedan en la URL para compartir o recargar.
+  useEffect(() => {
+    const parametros = new URLSearchParams(window.location.search);
+    if (titulo) {
+      parametros.set("q", titulo);
+    } else {
+      parametros.delete("q");
+    }
+    if (genero) {
+      parametros.set("genero", genero);
+    } else {
+      parametros.delete("genero");
+    }
+    const consulta = parametros.toString();
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${consulta ? `?${consulta}` : ""}`,
+    );
+  }, [titulo, genero]);
 
   async function toggleFavorito(song: Cancion) {
     try {
@@ -146,9 +184,10 @@ export default function Explore() {
         </form>
 
         {status === "loading" ? (
-          <div className="archive-state" role="status">
-            <span className="loading-pulse" aria-hidden="true" />
-            <p>Cargando el catálogo…</p>
+          <div className="explore-grid" aria-hidden="true">
+            {Array.from({ length: 6 }, (_, index) => (
+              <div className="song-skeleton" key={index} />
+            ))}
           </div>
         ) : status === "error" ? (
           <div className="archive-state" role="alert">

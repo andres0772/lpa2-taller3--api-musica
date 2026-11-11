@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Explore from "@/pages/Explore";
 import { AppToaster } from "@/components/AppToaster";
 
@@ -80,6 +80,11 @@ describe("Explore", () => {
     vi.unstubAllGlobals();
   });
 
+  afterEach(() => {
+    // La URL es estado compartido: cada test arranca limpio.
+    window.history.pushState({}, "", "/canciones");
+  });
+
   it("confirms favorites changes with toasts", async () => {
     const fetchMock = mockApi();
 
@@ -114,23 +119,65 @@ describe("Explore", () => {
     expect(fetchMock.mock.calls[0]?.[0]).toContain("/api/canciones?page=1&page_size=12");
   });
 
-  it("searches the catalog through the API filters", async () => {
+  it("reads the initial filters from the URL", async () => {
+    window.history.pushState({}, "", "/canciones?q=queen&genero=Rock");
+    const fetchMock = mockApi();
+
+    render(<Explore />);
+
+    expect(screen.getByLabelText("Buscar por título o artista")).toHaveValue("queen");
+    expect(screen.getByLabelText("Género")).toHaveValue("Rock");
+    await waitFor(() => {
+      const buscarCall = fetchMock.mock.calls.find((call) =>
+        String(call[0]).includes("/api/canciones/buscar"),
+      );
+      expect(String(buscarCall?.[0])).toContain("titulo=queen");
+      expect(String(buscarCall?.[0])).toContain("genero=Rock");
+    });
+    window.history.pushState({}, "", "/canciones");
+  });
+
+  it("searches as the user types, collapsing keystrokes into one request", async () => {
     const fetchMock = mockApi();
 
     render(<Explore />);
     await screen.findByRole("heading", { name: "Bohemian Rhapsody" });
 
-    fireEvent.change(screen.getByLabelText("Buscar por título o artista"), {
-      target: { value: "queen" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Buscar" }));
+    const campo = screen.getByLabelText("Buscar por título o artista");
+    fireEvent.change(campo, { target: { value: "la" } });
+    fireEvent.change(campo, { target: { value: "lady" } });
 
     await waitFor(() => {
-      const buscarCall = fetchMock.mock.calls.find((call) =>
+      const buscarCalls = fetchMock.mock.calls.filter((call) =>
         String(call[0]).includes("/api/canciones/buscar"),
       );
-      expect(buscarCall?.[0]).toContain("titulo=queen");
+      expect(buscarCalls.length).toBe(1);
+      expect(String(buscarCalls[0]?.[0])).toContain("titulo=lady");
     });
+    expect(window.location.search).toContain("q=lady");
+    window.history.pushState({}, "", "/canciones");
+  });
+
+  it("shows loading skeletons before the catalog arrives", async () => {
+    let resolver: ((valor: unknown) => void) | undefined;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        () =>
+          new Promise((resolve) => {
+            resolver = resolve;
+          }),
+      ),
+    );
+
+    render(<Explore />);
+
+    expect(document.querySelectorAll(".song-skeleton")).toHaveLength(6);
+    resolver?.({ ok: true, json: async () => [] });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(document.querySelectorAll(".song-skeleton")).toHaveLength(0);
   });
 
   it("filters the catalog by genre", async () => {
@@ -142,10 +189,10 @@ describe("Explore", () => {
     fireEvent.change(screen.getByLabelText("Género"), { target: { value: "Pop" } });
 
     await waitFor(() => {
-      const buscarCall = fetchMock.mock.calls.find((call) =>
+      const buscarCalls = fetchMock.mock.calls.filter((call) =>
         String(call[0]).includes("/api/canciones/buscar"),
       );
-      expect(buscarCall?.[0]).toContain("genero=Pop");
+      expect(String(buscarCalls.at(-1)?.[0])).toContain("genero=Pop");
     });
   });
 
@@ -170,7 +217,7 @@ describe("Explore", () => {
     fireEvent.change(screen.getByLabelText("Buscar por título o artista"), {
       target: { value: "zzz" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Buscar" }));
+    fireEvent.submit(screen.getByRole("search"));
 
     expect(await screen.findByText(/no encontramos canciones/i)).toBeInTheDocument();
   });
