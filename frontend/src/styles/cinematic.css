@@ -951,6 +951,52 @@
   }
 }
 
+/* Movimiento durante la reproducción */
+.performance[data-playing="true"] .vinyl-record {
+  animation: cinematic-vinyl-spin 8s linear infinite;
+}
+
+.performance[data-playing="true"] .waveform i {
+  transform-origin: center;
+  animation: cinematic-bar-bounce 1.15s ease-in-out infinite;
+  animation-delay: calc(var(--bar-index, 0) * -70ms);
+}
+
+.performance[data-playing="true"] .light-beam {
+  animation: cinematic-beam-pulse 4.5s ease-in-out infinite;
+}
+
+@keyframes cinematic-vinyl-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cinematic-bar-bounce {
+  0%,
+  100% {
+    transform: scaleY(0.55);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scaleY(1.3);
+    opacity: 1;
+  }
+}
+
+@keyframes cinematic-beam-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
 /* Exploración del catálogo */
 .explore-main {
   width: min(1360px, calc(100% - 48px));

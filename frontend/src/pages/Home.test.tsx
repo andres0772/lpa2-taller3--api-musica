@@ -57,6 +57,42 @@ describe("Home", () => {
     );
   });
 
+  it("marks the hero player as playing while audio plays", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [
+          {
+            id: 1,
+            titulo: "Bohemian Rhapsody",
+            artista: "Queen",
+            album: "A Night at the Opera",
+            duracion: "5:55",
+            duracion_segundos: 355,
+            duracion_formato: "5:55",
+            año: 1975,
+            genero: "Rock",
+            fecha_creacion: "2024-01-15T10:30:00Z",
+            archivo_audio: "/audio/bohemian.mp3",
+          },
+        ],
+      }),
+    );
+
+    const { container } = render(<Home />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reproducir Bohemian Rhapsody" }),
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector(".performance")).toHaveAttribute(
+        "data-playing",
+        "true",
+      );
+    });
+  });
+
   it("renders the cinematic landing experience", async () => {
     render(<Home />);
 

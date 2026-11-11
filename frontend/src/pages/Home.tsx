@@ -113,7 +113,11 @@ export default function Home() {
             </div>
           </div>
 
-          <section className="performance" aria-label="Canción destacada">
+          <section
+          className="performance"
+          aria-label="Canción destacada"
+          data-playing={isPlaying ? "true" : "false"}
+        >
             <span className="light-beam beam-left" aria-hidden="true" />
             <span className="light-beam beam-right" aria-hidden="true" />
             <span className="stage-halo" aria-hidden="true" />
@@ -156,7 +160,15 @@ export default function Home() {
 
               <div className="waveform" aria-hidden="true">
                 {Array.from({ length: 18 }, (_, index) => (
-                  <i key={index} style={{ "--bar-height": `${8 + (index * 7) % 30}px` } as React.CSSProperties} />
+                  <i
+                    key={index}
+                    style={
+                      {
+                        "--bar-height": `${8 + (index * 7) % 30}px`,
+                        "--bar-index": index,
+                      } as React.CSSProperties
+                    }
+                  />
                 ))}
               </div>
               <div className="player-time" aria-hidden="true">

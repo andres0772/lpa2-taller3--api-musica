@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Favorites from "@/pages/Favorites";
 
@@ -43,6 +43,31 @@ function mockFavorites(favorites: unknown[]) {
 describe("Favorites", () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("marks the luminous stage as playing while audio plays", async () => {
+    mockFavorites([
+      {
+        id: 7,
+        id_usuario: 1,
+        id_cancion: 2,
+        fecha_marcado: "2024-04-01T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+    ]);
+
+    const { container } = render(<Favorites />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reproducir Stairway to Heaven" }),
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector(".luminous-stage")).toHaveAttribute(
+        "data-playing",
+        "true",
+      );
+    });
   });
 
   it("shows and plays saved music in the luminous archive", async () => {

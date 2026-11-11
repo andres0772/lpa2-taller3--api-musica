@@ -124,7 +124,11 @@ export default function Favorites() {
           </div>
         </aside>
 
-        <section className="luminous-stage" aria-label="Archivo de canciones guardadas">
+        <section
+          className="luminous-stage"
+          aria-label="Archivo de canciones guardadas"
+          data-playing={isPlaying ? "true" : "false"}
+        >
           <span className="luminous-label">Archivo · música guardada</span>
           <div className="luminous-orbit orbit-one" aria-hidden="true" />
           <div className="luminous-orbit orbit-two" aria-hidden="true" />
@@ -185,11 +189,16 @@ export default function Favorites() {
                 {selected.song.artista} · {selected.song.album} · {selected.song.año}
               </p>
 
-              <div className="luminous-wave" aria-hidden="true">
+              <div className="luminous-wave" aria-hidden="true" data-playing={isPlaying ? "true" : "false"}>
                 {Array.from({ length: 20 }, (_, index) => (
                   <i
                     key={index}
-                    style={{ "--bar-height": `${12 + (index * 11) % 38}px` } as React.CSSProperties}
+                    style={
+                      {
+                        "--bar-height": `${12 + (index * 11) % 38}px`,
+                        "--bar-index": index,
+                      } as React.CSSProperties
+                    }
                   />
                 ))}
               </div>
