@@ -32,6 +32,18 @@ const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000"
 ).replace(/\/$/, "");
 
+// La API devuelve archivo_audio como ruta relativa ('/audio/x.mp3');
+// el navegador necesita la URL absoluta contra el origen de la API.
+export function audioUrl(ruta: string | null): string | null {
+  if (!ruta) {
+    return null;
+  }
+  if (/^https?:\/\//.test(ruta)) {
+    return ruta;
+  }
+  return `${API_BASE_URL}${ruta}`;
+}
+
 async function request<T>(
   path: string,
   options?: RequestInit,

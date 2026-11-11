@@ -21,10 +21,10 @@ describe("playback motion", () => {
 
   it("animates the waveforms only while playing", () => {
     expect(cinematicCss).toMatch(
-      /\.performance\[data-playing="true"\] \.waveform i\s*\{[^}]*animation:/,
+      /\.performance\[data-playing="true"\] \.waveform:not\(\[data-live="true"\]\) i\s*\{([^}]*animation:)/s,
     );
     expect(luminousCss).toMatch(
-      /\.luminous-wave\[data-playing="true"\] i\s*\{[^}]*animation:/,
+      /\.luminous-wave\[data-playing="true"\]:not\(\[data-live="true"\]\) i\s*\{([^}]*animation:)/s,
     );
     expect(cinematicCss).toContain("@keyframes cinematic-bar-bounce");
     expect(luminousCss).toContain("@keyframes luminous-bar-bounce");

@@ -525,7 +525,7 @@
   animation: luminous-disc-spin 5.5s linear infinite;
 }
 
-.luminous-wave[data-playing="true"] i {
+.luminous-wave[data-playing="true"]:not([data-live="true"]) i {
   transform-origin: center;
   animation: luminous-bar-bounce 1.25s ease-in-out infinite;
   animation-delay: calc(var(--bar-index, 0) * -80ms);

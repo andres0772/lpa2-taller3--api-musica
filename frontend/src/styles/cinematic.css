@@ -957,7 +957,7 @@
   animation: cinematic-vinyl-spin 8s linear infinite;
 }
 
-.performance[data-playing="true"] .waveform i {
+.performance[data-playing="true"] .waveform:not([data-live="true"]) i {
   transform-origin: center;
   animation: cinematic-bar-bounce 1.15s ease-in-out infinite;
   animation-delay: calc(var(--bar-index, 0) * -70ms);

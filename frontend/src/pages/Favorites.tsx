@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Navbar } from "@/components/Navbar";
+import { useAudioWaveform } from "@/hooks/useAudioWaveform";
 import {
+  audioUrl,
   getCancion,
   getFavoritos,
   getUsuario,
@@ -24,6 +26,11 @@ export default function Favorites() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const waveRef = useRef<HTMLDivElement>(null);
+  const { start: iniciarWaveform, stop: detenerWaveform } = useAudioWaveform(
+    audioRef,
+    waveRef,
+  );
 
   const loadFavorites = useCallback(async () => {
     setStatus("loading");
@@ -63,9 +70,11 @@ export default function Favorites() {
     if (audio.paused) {
       await audio.play();
       setIsPlaying(true);
+      iniciarWaveform();
     } else {
       audio.pause();
       setIsPlaying(false);
+      detenerWaveform();
     }
   }
 
@@ -189,7 +198,12 @@ export default function Favorites() {
                 {selected.song.artista} · {selected.song.album} · {selected.song.año}
               </p>
 
-              <div className="luminous-wave" aria-hidden="true" data-playing={isPlaying ? "true" : "false"}>
+              <div
+                className="luminous-wave"
+                aria-hidden="true"
+                data-playing={isPlaying ? "true" : "false"}
+                ref={waveRef}
+              >
                 {Array.from({ length: 20 }, (_, index) => (
                   <i
                     key={index}
@@ -205,9 +219,13 @@ export default function Favorites() {
 
               <audio
                 ref={audioRef}
-                src={selected.song.archivo_audio ?? undefined}
+                crossOrigin="anonymous"
+                src={audioUrl(selected.song.archivo_audio) ?? undefined}
                 preload="metadata"
-                onEnded={() => setIsPlaying(false)}
+                onEnded={() => {
+                  setIsPlaying(false);
+                  detenerWaveform();
+                }}
               />
 
               <div className="now-actions">

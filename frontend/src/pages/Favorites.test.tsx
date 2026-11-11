@@ -23,6 +23,34 @@ const cancion = {
   archivo_audio: "/audio/stairway.mp3",
 };
 
+class FakeAudioContext {
+  static instanciado = false;
+  state = "running";
+  createMediaElementSource = () => ({
+    connect: () => undefined,
+    disconnect: () => undefined,
+  });
+  createAnalyser = () => ({
+    fftSize: 0,
+    smoothingTimeConstant: 0,
+    frequencyBinCount: 16,
+    connect: () => undefined,
+    disconnect: () => undefined,
+    getByteFrequencyData: (data: Uint8Array) => data.fill(200),
+  });
+  resume = async () => undefined;
+  close = async () => undefined;
+  constructor() {
+    FakeAudioContext.instanciado = true;
+  }
+}
+
+function stubWebAudio() {
+  FakeAudioContext.instanciado = false;
+  vi.stubGlobal("AudioContext", FakeAudioContext);
+  return FakeAudioContext;
+}
+
 function mockFavorites(favorites: unknown[]) {
   const fetchMock = vi.fn(async (input: string | URL | Request) => {
     const url = String(input);
@@ -70,6 +98,37 @@ describe("Favorites", () => {
     });
   });
 
+  it("streams real audio levels into the luminous waveform", async () => {
+    const contexto = stubWebAudio();
+    mockFavorites([
+      {
+        id: 7,
+        id_usuario: 1,
+        id_cancion: 2,
+        fecha_marcado: "2024-04-01T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+    ]);
+
+    const { container } = render(<Favorites />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reproducir Stairway to Heaven" }),
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector(".luminous-wave")).toHaveAttribute(
+        "data-live",
+        "true",
+      );
+    });
+    expect(contexto.instanciado).toBe(true);
+    expect(container.querySelector("audio")).toHaveAttribute(
+      "crossorigin",
+      "anonymous",
+    );
+  });
+
   it("shows and plays saved music in the luminous archive", async () => {
     mockFavorites([
       {
@@ -93,7 +152,7 @@ describe("Favorites", () => {
     ).toBeEnabled();
     expect(container.querySelector("audio")).toHaveAttribute(
       "src",
-      "/audio/stairway.mp3",
+      "http://127.0.0.1:8000/audio/stairway.mp3",
     );
     expect(screen.getByText("Led Zeppelin · Led Zeppelin IV · 1971")).toBeInTheDocument();
   });

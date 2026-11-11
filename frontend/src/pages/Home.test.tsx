@@ -93,6 +93,65 @@ describe("Home", () => {
     });
   });
 
+  it("streams real audio levels into the hero waveform", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [
+          {
+            id: 1,
+            titulo: "Bohemian Rhapsody",
+            artista: "Queen",
+            album: "A Night at the Opera",
+            duracion: "5:55",
+            duracion_segundos: 355,
+            duracion_formato: "5:55",
+            año: 1975,
+            genero: "Rock",
+            fecha_creacion: "2024-01-15T10:30:00Z",
+            archivo_audio: "/audio/01-bohemian-rhapsody.mp3",
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("AudioContext", function FakeAudioContext() {
+      return {
+        state: "running",
+        createMediaElementSource: () => ({
+          connect: () => undefined,
+          disconnect: () => undefined,
+        }),
+        createAnalyser: () => ({
+          fftSize: 0,
+          smoothingTimeConstant: 0,
+          frequencyBinCount: 16,
+          connect: () => undefined,
+          disconnect: () => undefined,
+          getByteFrequencyData: (data: Uint8Array) => data.fill(200),
+        }),
+        resume: async () => undefined,
+        close: async () => undefined,
+      };
+    });
+
+    const { container } = render(<Home />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reproducir Bohemian Rhapsody" }),
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector(".waveform")).toHaveAttribute(
+        "data-live",
+        "true",
+      );
+    });
+    expect(container.querySelector("audio")).toHaveAttribute(
+      "crossorigin",
+      "anonymous",
+    );
+  });
+
   it("renders the cinematic landing experience", async () => {
     render(<Home />);
 

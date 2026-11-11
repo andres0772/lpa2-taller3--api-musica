@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Navbar } from "@/components/Navbar";
+import { useAudioWaveform } from "@/hooks/useAudioWaveform";
 import {
+  audioUrl,
   crearFavorito,
   listCanciones,
   type Cancion,
@@ -18,6 +20,11 @@ export default function Home() {
   >("idle");
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const waveRef = useRef<HTMLDivElement>(null);
+  const { start: iniciarWaveform, stop: detenerWaveform } = useAudioWaveform(
+    audioRef,
+    waveRef,
+  );
 
   useEffect(() => {
     let active = true;
@@ -48,9 +55,11 @@ export default function Home() {
     if (audio.paused) {
       await audio.play();
       setIsPlaying(true);
+      iniciarWaveform();
     } else {
       audio.pause();
       setIsPlaying(false);
+      detenerWaveform();
     }
   }
 
@@ -158,7 +167,7 @@ export default function Home() {
                 <span className="track-duration">{featured.duracion_formato}</span>
               </div>
 
-              <div className="waveform" aria-hidden="true">
+              <div className="waveform" aria-hidden="true" ref={waveRef}>
                 {Array.from({ length: 18 }, (_, index) => (
                   <i
                     key={index}
@@ -178,9 +187,13 @@ export default function Home() {
 
               <audio
                 ref={audioRef}
-                src={featured.archivo_audio ?? undefined}
+                crossOrigin="anonymous"
+                src={audioUrl(featured.archivo_audio) ?? undefined}
                 preload="metadata"
-                onEnded={() => setIsPlaying(false)}
+                onEnded={() => {
+                  setIsPlaying(false);
+                  detenerWaveform();
+                }}
               />
             </div>
           </section>
