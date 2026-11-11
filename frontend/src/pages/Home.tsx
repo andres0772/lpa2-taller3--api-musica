@@ -1,97 +1,267 @@
+import { useEffect, useRef, useState } from "react";
 import { Navbar } from "@/components/Navbar";
-import { ScrollVideo } from "@/components/ScrollVideo";
-import { MarqueeCards } from "@/components/MarqueeCards";
-import { GlassCard } from "@/components/GlassCard";
+import {
+  crearFavorito,
+  listCanciones,
+  type Cancion,
+} from "@/api/music";
+import { DEMO_SONGS } from "@/data/demoSongs";
 
-const canciones = [
-  { id: 1, titulo: "Bohemian Rhapsody", artista: "Queen", genero: "Rock" },
-  { id: 2, titulo: "Stairway to Heaven", artista: "Led Zeppelin", genero: "Rock" },
-  { id: 3, titulo: "Billie Jean", artista: "Michael Jackson", genero: "Pop" },
-  { id: 4, titulo: "Hotel California", artista: "Eagles", genero: "Rock" },
-  { id: 5, titulo: "Sweet Child o' Mine", artista: "Guns N' Roses", genero: "Rock" },
-  { id: 6, titulo: "Smells Like Teen Spirit", artista: "Nirvana", genero: "Rock" },
-  { id: 7, titulo: "Shape of You", artista: "Ed Sheeran", genero: "Pop" },
-  { id: 8, titulo: "Take Five", artista: "Dave Brubeck", genero: "Jazz" },
-  { id: 9, titulo: "One More Time", artista: "Daft Punk", genero: "Electronic" },
-  { id: 10, titulo: "La Bamba", artista: "Ritchie Valens", genero: "Rock" },
-];
+const DEMO_USER_ID = 1;
 
 export default function Home() {
+  const [canciones, setCanciones] = useState<Cancion[]>(DEMO_SONGS);
+  const [apiConnected, setApiConnected] = useState(false);
+  const [favoriteState, setFavoriteState] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    listCanciones()
+      .then((songs) => {
+        if (!active || songs.length === 0) return;
+        setCanciones(songs);
+        setApiConnected(true);
+      })
+      .catch(() => {
+        if (active) setApiConnected(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const featured = canciones[0] ?? DEMO_SONGS[0];
+  const secondarySongs = canciones.slice(1, 4);
+
+  async function togglePlayback() {
+    const audio = audioRef.current;
+    if (!audio || !featured.archivo_audio) return;
+
+    if (audio.paused) {
+      await audio.play();
+      setIsPlaying(true);
+    } else {
+      audio.pause();
+      setIsPlaying(false);
+    }
+  }
+
+  async function saveFeatured() {
+    setFavoriteState("saving");
+
+    try {
+      await crearFavorito(DEMO_USER_ID, featured.id);
+      setFavoriteState("saved");
+    } catch {
+      setFavoriteState("error");
+    }
+  }
+
   return (
-    <div className="min-h-screen relative selection:bg-indigo-500/30">
-      <Navbar />
+    <div className="cinematic-page">
+      <Navbar active="home" />
 
-      <main className="relative pt-32 pb-24">
-        {/* Video parallax */}
-        <ScrollVideo src="/video/intro.mp4" />
-
-        <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-4xl md:text-7xl font-black mb-10 text-white tracking-tight leading-tight">
-            YOURMUSIC
-          </h2>
-          <p className="text-lg text-slate-400 mb-16 max-w-2xl">
-            Tus canciones favoritas, en un solo lugar. Crea tu perfil, explora
-            música y arma tus listas personales.
-          </p>
-
-          {/* Marquee izquierda → derecha */}
-          <MarqueeCards
-            items={canciones}
-            direction="left"
-            label="Descubriendo ahora"
-          />
-
-          {/* Marquee derecha → izquierda */}
-          <MarqueeCards
-            items={[...canciones].reverse()}
-            direction="right"
-            label="Más escuchadas"
-          />
-        </div>
-
-        {/* Login glass */}
-        <div className="max-w-md mx-auto px-6 py-20">
-          <GlassCard className="p-8 max-w-md mx-auto">
-            <h3 className="text-xl font-bold mb-6 text-white tracking-tight">
-              Bienvenido de vuelta
-            </h3>
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">
-                  Correo electrónico
-                </label>
-                <input
-                  type="email"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                  placeholder="tu@correo.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">
-                  Contraseña
-                </label>
-                <input
-                  type="password"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                  placeholder="••••••••"
-                />
-              </div>
-              <button
-                type="button"
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20"
-              >
-                Iniciar sesión
-              </button>
-            </form>
-            <p className="mt-4 text-center text-xs text-slate-400">
-              ¿No tienes cuenta?{" "}
-              <a href="#" className="text-indigo-400 hover:text-indigo-300">
-                Regístrate gratis
-              </a>
+      <main className="cinematic-main">
+        <section className="cinematic-hero" aria-labelledby="hero-title">
+          <div className="hero-copy">
+            <span className="eyebrow">Un espacio para escuchar distinto</span>
+            <h1 id="hero-title">
+              Tu banda sonora <span>en movimiento.</span>
+            </h1>
+            <p>
+              Explorá canciones, encontrá tu próxima obsesión y guardá todo lo
+              que merece volver a sonar.
             </p>
-          </GlassCard>
-        </div>
+            <div className="hero-actions">
+              <a className="action-button action-primary" href="#discovery">
+                Explorar canciones <span aria-hidden="true">→</span>
+              </a>
+              <a className="action-button action-secondary" href="/favoritos">
+                Ver favoritos <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            <div className="demo-note" aria-label="Catálogo de demostración">
+              <span className="demo-stack" aria-hidden="true">
+                <span>YM</span>
+                <span>Q</span>
+                <span>10</span>
+              </span>
+              <span>
+                <strong>10 canciones demo</strong>
+                <br />
+                Rock, pop, jazz y electrónica
+              </span>
+            </div>
+          </div>
+
+          <section className="performance" aria-label="Canción destacada">
+            <span className="light-beam beam-left" aria-hidden="true" />
+            <span className="light-beam beam-right" aria-hidden="true" />
+            <span className="stage-halo" aria-hidden="true" />
+            <div className="vinyl-record" aria-hidden="true">
+              <span className="record-label">
+                <b>YourMusic</b>
+                <small>Side A · Demo 01</small>
+              </span>
+            </div>
+
+            <div className="glass-player">
+              <div className="player-heading">
+                <button
+                  className="play-button"
+                  type="button"
+                  onClick={togglePlayback}
+                  disabled={!featured.archivo_audio}
+                  aria-label={
+                    featured.archivo_audio
+                      ? `${isPlaying ? "Pausar" : "Reproducir"} ${featured.titulo}`
+                      : `Audio no disponible para ${featured.titulo}`
+                  }
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    {isPlaying ? (
+                      <path d="M7 5h4v14H7zm6 0h4v14h-4z" />
+                    ) : (
+                      <path d="M8 5v14l11-7z" />
+                    )}
+                  </svg>
+                </button>
+                <div className="track-copy">
+                  <h2>{featured.titulo}</h2>
+                  <span>
+                    {featured.artista} · {featured.genero} · Catálogo demo
+                  </span>
+                </div>
+                <span className="track-duration">{featured.duracion_formato}</span>
+              </div>
+
+              <div className="waveform" aria-hidden="true">
+                {Array.from({ length: 18 }, (_, index) => (
+                  <i key={index} style={{ "--bar-height": `${8 + (index * 7) % 30}px` } as React.CSSProperties} />
+                ))}
+              </div>
+              <div className="player-time" aria-hidden="true">
+                <span>0:00</span>
+                <span>{featured.duracion_formato}</span>
+              </div>
+
+              <audio
+                ref={audioRef}
+                src={featured.archivo_audio ?? undefined}
+                preload="metadata"
+                onEnded={() => setIsPlaying(false)}
+              />
+            </div>
+          </section>
+        </section>
+
+        <section
+          id="discovery"
+          className="editorial-discovery"
+          aria-labelledby="discovery-title"
+        >
+          <div className="editorial-shell">
+            <header className="editorial-heading">
+              <span className="editorial-kicker">Issue 02 · Catálogo demo</span>
+              <div>
+                <h2 id="discovery-title">Descubriendo ahora</h2>
+                <p>
+                  Una selección editorial para mirar, comparar y elegir la
+                  próxima canción con intención.
+                </p>
+              </div>
+            </header>
+
+            <div className="editorial-grid">
+              <a className="lead-card" href="#featured">
+                <span className="lead-art" aria-hidden="true">
+                  <svg viewBox="0 0 160 160" fill="none">
+                    <circle cx="80" cy="80" r="58" stroke="currentColor" strokeOpacity=".32" />
+                    <circle cx="80" cy="80" r="40" stroke="currentColor" strokeOpacity=".52" />
+                    <path d="M20 102c20-38 31 24 52-12 16-27 31 18 68-24" stroke="currentColor" strokeWidth="2" />
+                    <circle cx="80" cy="80" r="4" fill="currentColor" />
+                  </svg>
+                  <span className="lead-number">01</span>
+                </span>
+                <div className="lead-copy">
+                  <span className="lead-label">En portada</span>
+                  <h3>{featured.titulo}</h3>
+                  <p className="lead-artist">
+                    {featured.artista} · {featured.album ?? "Catálogo demo"}
+                  </p>
+                  <div className="lead-meta">
+                    <span>
+                      <span>Género</span>
+                      <strong>{featured.genero}</strong>
+                    </span>
+                    <span>
+                      <span>Año</span>
+                      <strong>{featured.año}</strong>
+                    </span>
+                    <span>
+                      <span>Duración</span>
+                      <strong>{featured.duracion_formato}</strong>
+                    </span>
+                  </div>
+                  <span className="lead-action">Escuchar la selección →</span>
+                </div>
+              </a>
+
+              <div className="secondary-stack">
+                {secondarySongs.map((song, index) => (
+                  <a className="secondary-card" href="#featured" key={song.id}>
+                    <span className="secondary-cover" aria-hidden="true">
+                      {String(index + 2).padStart(2, "0")}
+                    </span>
+                    <span className="secondary-copy">
+                      <strong>{song.titulo}</strong>
+                      <span>
+                        {song.artista} · {song.album ?? "Catálogo demo"}
+                      </span>
+                    </span>
+                    <span className="secondary-meta">
+                      <strong>{song.duracion_formato}</strong>
+                      <span>{song.genero}</span>
+                    </span>
+                    <span className="secondary-arrow" aria-hidden="true">
+                      ↗
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
+
+      <footer id="cuenta" className="cinematic-footer">
+        <span>YOURMUSIC · Prototipo visual</span>
+        <span>
+          {apiConnected
+            ? "Catálogo conectado a la API"
+            : "Vista de demostración · API no disponible"}
+        </span>
+        <button
+          className="save-favorite"
+          type="button"
+          onClick={saveFeatured}
+          disabled={!apiConnected || favoriteState === "saving"}
+        >
+          {favoriteState === "saved"
+            ? "Guardada en favoritos"
+            : favoriteState === "error"
+              ? "No se pudo guardar"
+              : favoriteState === "saving"
+                ? "Guardando…"
+                : "Guardar en favoritos"}
+        </button>
+      </footer>
     </div>
   );
 }
