@@ -9,7 +9,7 @@ const usuario = {
   fecha_registro: "2024-01-15T10:30:00Z",
 };
 
-const cancion = {
+const cancionDos = {
   id: 2,
   titulo: "Stairway to Heaven",
   artista: "Led Zeppelin",
@@ -21,6 +21,20 @@ const cancion = {
   genero: "Rock",
   fecha_creacion: "2024-01-22T10:30:00Z",
   archivo_audio: "/audio/stairway.mp3",
+};
+
+const cancionTres = {
+  id: 3,
+  titulo: "Billie Jean",
+  artista: "Michael Jackson",
+  album: "Thriller",
+  duracion: "4:54",
+  duracion_segundos: 294,
+  duracion_formato: "4:54",
+  año: 1982,
+  genero: "Pop",
+  fecha_creacion: "2024-02-01T15:00:00Z",
+  archivo_audio: "/audio/billie.mp3",
 };
 
 class FakeAudioContext {
@@ -61,7 +75,10 @@ function mockFavorites(favorites: unknown[]) {
       return { ok: true, json: async () => usuario } as Response;
     }
     if (url.includes("/api/canciones/2")) {
-      return { ok: true, json: async () => cancion } as Response;
+      return { ok: true, json: async () => cancionDos } as Response;
+    }
+    if (url.includes("/api/canciones/3")) {
+      return { ok: true, json: async () => cancionTres } as Response;
     }
     return { ok: false, status: 404, json: async () => ({}) } as Response;
   });
@@ -126,6 +143,75 @@ describe("Favorites", () => {
     expect(container.querySelector("audio")).toHaveAttribute(
       "crossorigin",
       "anonymous",
+    );
+  });
+
+  it("stops playback when the selected track changes or is removed", async () => {
+    stubWebAudio();
+    mockFavorites([
+      {
+        id: 7,
+        id_usuario: 1,
+        id_cancion: 2,
+        fecha_marcado: "2024-04-01T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+      {
+        id: 8,
+        id_usuario: 1,
+        id_cancion: 3,
+        fecha_marcado: "2024-04-02T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+    ]);
+
+    const { container } = render(<Favorites />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reproducir Stairway to Heaven" }),
+    );
+    await waitFor(() => {
+      expect(container.querySelector(".luminous-stage")).toHaveAttribute(
+        "data-playing",
+        "true",
+      );
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Billie Jean/ }));
+
+    await waitFor(() => {
+      expect(container.querySelector(".luminous-stage")).toHaveAttribute(
+        "data-playing",
+        "false",
+      );
+    });
+    expect(container.querySelector(".luminous-wave")).toHaveAttribute(
+      "data-live",
+      "false",
+    );
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reproducir Billie Jean" }),
+    );
+    await waitFor(() => {
+      expect(container.querySelector(".luminous-stage")).toHaveAttribute(
+        "data-playing",
+        "true",
+      );
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Quitar de favoritos" }));
+
+    await waitFor(() => {
+      expect(container.querySelector(".luminous-stage")).toHaveAttribute(
+        "data-playing",
+        "false",
+      );
+    });
+    expect(container.querySelector(".luminous-wave")).toHaveAttribute(
+      "data-live",
+      "false",
     );
   });
 

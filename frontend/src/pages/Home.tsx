@@ -65,6 +65,10 @@ export default function Home() {
 
   function seleccionarDestacada(song: Cancion) {
     setFeaturedId(song.id);
+    // El <audio> pausa solo al cambiar de src: sincronizamos el estadovisible.
+    audioRef.current?.pause();
+    setIsPlaying(false);
+    detenerWaveform();
 
     const reducedMotion = window.matchMedia
       ?.("(prefers-reduced-motion: reduce)")

@@ -54,7 +54,12 @@ async function request<T>(
     throw new Error(`La API respondió con estado ${response.status}`);
   }
 
-  return response.json() as Promise<T>;
+  // Respuestas sin body (204 al quitar favoritos) no tienen JSON que parsear.
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return undefined as T;
+  }
 }
 
 export function listCanciones(page = 1, pageSize = 100): Promise<Cancion[]> {

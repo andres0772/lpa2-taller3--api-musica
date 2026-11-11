@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { audioUrl } from "./music";
+import { describe, expect, it, vi } from "vitest";
+import { audioUrl, quitarFavorito } from "./music";
 
 describe("audioUrl", () => {
   it("resolves the API's relative audio paths against the API origin", () => {
@@ -16,5 +16,23 @@ describe("audioUrl", () => {
 
   it("returns null when the song has no audio", () => {
     expect(audioUrl(null)).toBeNull();
+  });
+
+  it("resolves remove-favorite on 204 No Content", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        status: 204,
+        headers: new Headers(),
+        text: async () => "",
+        json: async () => {
+          throw new SyntaxError("Unexpected end of JSON input");
+        },
+      })),
+    );
+
+    await expect(quitarFavorito(1, 2)).resolves.toBeUndefined();
+    vi.unstubAllGlobals();
   });
 });

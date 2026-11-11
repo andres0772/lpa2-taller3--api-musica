@@ -10,9 +10,12 @@ const canciones = [
     artista: "Queen",
     album: "A Night at the Opera",
     duracion: "5:55",
+    duracion_segundos: 355,
+    duracion_formato: "5:55",
     año: 1975,
     genero: "Rock",
-    archivo_audio: null,
+    fecha_creacion: "2024-01-15T10:30:00Z",
+    archivo_audio: "/audio/01-bohemian-rhapsody.mp3",
   },
   {
     id: 3,
@@ -20,9 +23,12 @@ const canciones = [
     artista: "Michael Jackson",
     album: "Thriller",
     duracion: "4:54",
+    duracion_segundos: 294,
+    duracion_formato: "4:54",
     año: 1982,
     genero: "Pop",
-    archivo_audio: null,
+    fecha_creacion: "2024-02-01T15:00:00Z",
+    archivo_audio: "/audio/03-billie-jean.mp3",
   },
   {
     id: 8,
@@ -30,9 +36,12 @@ const canciones = [
     artista: "Dave Brubeck",
     album: "Time Out",
     duracion: "5:24",
+    duracion_segundos: 324,
+    duracion_formato: "5:24",
     año: 1959,
     genero: "Jazz",
-    archivo_audio: null,
+    fecha_creacion: "2024-01-20T10:30:00Z",
+    archivo_audio: "/audio/08-take-five.mp3",
   },
   {
     id: 9,
@@ -40,9 +49,12 @@ const canciones = [
     artista: "Daft Punk",
     album: "Discovery",
     duracion: "5:20",
+    duracion_segundos: 320,
+    duracion_formato: "5:20",
     año: 2000,
     genero: "Electronic",
-    archivo_audio: null,
+    fecha_creacion: "2024-04-10T16:45:00Z",
+    archivo_audio: "/audio/09-one-more-time.mp3",
   },
 ];
 
@@ -150,6 +162,58 @@ describe("Home", () => {
       "crossorigin",
       "anonymous",
     );
+  });
+
+  it("stops playback when another track becomes the featured song", async () => {
+    vi.stubGlobal(
+      "AudioContext",
+      function FakeAudioContext() {
+        return {
+          state: "running",
+          createMediaElementSource: () => ({
+            connect: () => undefined,
+            disconnect: () => undefined,
+          }),
+          createAnalyser: () => ({
+            fftSize: 0,
+            smoothingTimeConstant: 0,
+            frequencyBinCount: 16,
+            connect: () => undefined,
+            disconnect: () => undefined,
+            getByteFrequencyData: (data: Uint8Array) => data.fill(200),
+          }),
+          resume: async () => undefined,
+          close: async () => undefined,
+        };
+      },
+    );
+
+    const { container } = render(<Home />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reproducir Bohemian Rhapsody" }),
+    );
+    await waitFor(() => {
+      expect(container.querySelector(".performance")).toHaveAttribute(
+        "data-playing",
+        "true",
+      );
+    });
+
+    fireEvent.click(await screen.findByRole("button", { name: /Billie Jean/ }));
+
+    await waitFor(() => {
+      expect(container.querySelector(".performance")).toHaveAttribute(
+        "data-playing",
+        "false",
+      );
+    });
+    expect(container.querySelector(".waveform")).toHaveAttribute(
+      "data-live",
+      "false",
+    );
+    expect(
+      screen.getByRole("button", { name: "Reproducir Billie Jean" }),
+    ).toBeInTheDocument();
   });
 
   it("renders the cinematic landing experience", async () => {

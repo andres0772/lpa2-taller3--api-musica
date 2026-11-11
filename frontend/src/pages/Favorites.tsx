@@ -78,9 +78,19 @@ export default function Favorites() {
     }
   }
 
+  function seleccionar(songId: number) {
+    // El <audio> pausa solo al cambiar de src: sincronizamos el estado visible.
+    audioRef.current?.pause();
+    setSelectedId(songId);
+    setIsPlaying(false);
+    detenerWaveform();
+  }
+
   async function removeSelected() {
     if (!selected) return;
 
+    audioRef.current?.pause();
+    detenerWaveform();
     await quitarFavorito(DEMO_USER_ID, selected.song.id);
     const remaining = tracks.filter(({ song }) => song.id !== selected.song.id);
     setTracks(remaining);
@@ -107,7 +117,7 @@ export default function Favorites() {
                   aria-current={selected?.song.id === song.id ? "true" : undefined}
                   key={song.id}
                 >
-                  <button type="button" onClick={() => setSelectedId(song.id)}>
+                  <button type="button" onClick={() => seleccionar(song.id)}>
                     <span className="archive-number">{String(index + 1).padStart(2, "0")}</span>
                     <span>{song.titulo}</span>
                     <span className="archive-genre">{song.genero}</span>
