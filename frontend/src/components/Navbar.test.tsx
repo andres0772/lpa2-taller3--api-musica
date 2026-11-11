@@ -11,7 +11,7 @@ describe("Navbar", () => {
     expect(screen.getByRole("link", { name: "Inicio" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "Canciones" })).toHaveAttribute(
       "href",
-      "/#discovery",
+      "/canciones",
     );
     expect(screen.getByRole("link", { name: "Favoritos" })).toHaveAttribute(
       "href",
@@ -20,7 +20,7 @@ describe("Navbar", () => {
     expect(screen.getByRole("link", { name: "Iniciar sesión" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Explorar catálogo" })).toHaveAttribute(
       "href",
-      "/#discovery",
+      "/canciones",
     );
   });
 });

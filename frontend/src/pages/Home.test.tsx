@@ -68,7 +68,7 @@ describe("Home", () => {
     expect(screen.getByText("Un espacio para escuchar distinto")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Explorar canciones/ })).toHaveAttribute(
       "href",
-      "#discovery",
+      "/canciones",
     );
     expect(screen.getByRole("link", { name: /Ver favoritos/ })).toHaveAttribute(
       "href",

@@ -118,7 +118,7 @@ export default function Favorites() {
                 ? `Perfil de demostración · ${usuario.nombre}`
                 : "Perfil de demostración"}
             </p>
-            <a className="archive-action" href="/#discovery">
+            <a className="archive-action" href="/canciones">
               Volver al catálogo <span aria-hidden="true">↘</span>
             </a>
           </div>
@@ -172,7 +172,7 @@ export default function Favorites() {
                 Guardá canciones desde el catálogo y acá vas a poder verlas y
                 escucharlas cuando la API incluya el archivo de audio.
               </p>
-              <a href="/#discovery">Explorar el catálogo</a>
+              <a href="/canciones">Explorar el catálogo</a>
             </div>
           ) : selected ? (
             <article className="now-card">

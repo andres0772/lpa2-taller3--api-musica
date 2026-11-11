@@ -45,8 +45,29 @@ async function request<T>(
   return response.json() as Promise<T>;
 }
 
-export function listCanciones(): Promise<Cancion[]> {
-  return request<Cancion[]>("/api/canciones?page_size=100");
+export function listCanciones(page = 1, pageSize = 100): Promise<Cancion[]> {
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  return request<Cancion[]>(`/api/canciones?${params.toString()}`);
+}
+
+export interface BuscarCancionesFiltros {
+  titulo?: string;
+  genero?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export function buscarCanciones(filtros: BuscarCancionesFiltros = {}): Promise<Cancion[]> {
+  const params = new URLSearchParams();
+  if (filtros.titulo) {
+    params.set("titulo", filtros.titulo);
+  }
+  if (filtros.genero) {
+    params.set("genero", filtros.genero);
+  }
+  params.set("page", String(filtros.page ?? 1));
+  params.set("page_size", String(filtros.pageSize ?? 12));
+  return request<Cancion[]>(`/api/canciones/buscar?${params.toString()}`);
 }
 
 export function getUsuario(usuarioId: number): Promise<Usuario> {

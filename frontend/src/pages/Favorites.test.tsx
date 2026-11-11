@@ -85,7 +85,7 @@ describe("Favorites", () => {
     });
     expect(screen.getByRole("link", { name: "Explorar el catálogo" })).toHaveAttribute(
       "href",
-      "/#discovery",
+      "/canciones",
     );
   });
 });

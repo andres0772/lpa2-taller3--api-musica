@@ -79,7 +79,7 @@ export default function Home() {
               que merece volver a sonar.
             </p>
             <div className="hero-actions">
-              <a className="action-button action-primary" href="#discovery">
+              <a className="action-button action-primary" href="/canciones">
                 Explorar canciones <span aria-hidden="true">→</span>
               </a>
               <a className="action-button action-secondary" href="/favoritos">

@@ -26,7 +26,7 @@ export function Navbar({ active = "home" }: NavbarProps) {
           <a href="/" aria-current={active === "home" ? "page" : undefined}>
             Inicio
           </a>
-          <a href="/#discovery">Canciones</a>
+          <a href="/canciones">Canciones</a>
           <a
             href="/favoritos"
             aria-current={active === "favorites" ? "page" : undefined}
@@ -39,7 +39,7 @@ export function Navbar({ active = "home" }: NavbarProps) {
           <a className="nav-login" href="#cuenta">
             Iniciar sesión
           </a>
-          <a className="nav-primary" href="/#discovery">
+          <a className="nav-primary" href="/canciones">
             Explorar catálogo
           </a>
         </div>
