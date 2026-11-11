@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "./styles/cinematic.css";
+@import "./styles/luminous.css";
 
 @theme {
   --font-sans: "Geist Variable", "Inter Variable", system-ui, sans-serif;
@@ -23,10 +25,25 @@ html {
 }
 
 body {
+  min-width: 320px;
   background-color: var(--color-bg-deep);
   color: var(--color-text-main);
   font-family: var(--font-sans);
   @apply antialiased selection:bg-indigo-500/30;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-glow);
+  outline-offset: 4px;
+}
+
+button {
+  font: inherit;
 }
 
 .glass {
