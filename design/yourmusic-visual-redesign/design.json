@@ -1,0 +1,35 @@
+{
+  "title": "YourMusic — Visual directions",
+  "brief": "Landing page premium para descubrir canciones y crear una identidad musical personal, manteniendo el carácter oscuro y cristalino de YourMusic sin caer en una plantilla genérica.",
+  "feature": "odd/tasks/yourmusic-visual-redesign.md",
+  "artboards": [
+    {
+      "file": "01-cinematic-stage.html",
+      "title": "Escenario cinematográfico",
+      "tradeoff": "Inmersivo y emocional; prioriza una narrativa visual fuerte sobre la densidad de información.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-editorial-collection.html",
+      "title": "Colección editorial",
+      "tradeoff": "Refinado y legible como revista musical; ofrece menos spectacle cinematográfico a cambio de gran claridad.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-luminous-archive.html",
+      "title": "Archivo luminoso",
+      "tradeoff": "Rico, explorable y espacial; ofrece más profundidad, pero requiere una composición responsive más compleja.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "04-editorial-discovery-cards.html",
+      "title": "Colección editorial en portada",
+      "tradeoff": "La portada cinematográfica suma una selección editorial más rica y legible; ocupa más altura, pero jerarquiza mejor el descubrimiento.",
+      "width": 1440,
+      "height": 1220
+    }
+  ]
+}
