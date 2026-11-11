@@ -140,6 +140,8 @@ odd/
 # Frontend
 node_modules/
 frontend/video/
+frontend/test-results/
+frontend/playwright-report/
 
 
 # Spyder project settings

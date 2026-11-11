@@ -25,6 +25,7 @@ lpa2-taller3
 ├──  .env                 # Variables de entorno (desarrollo, pruebas, producción)
 ├──  .gitignore           # Archivos y directorios a ignorar por Git
 ├──  main.py              # Script principal para ejecutar la aplicación
+├──  frontend/             # SPA de React + TypeScript + Vite
 ├──  musica.db            # Base de Datos
 ├──  musica_api
 │   ├──  __init__.py      # Inicialización del módulo
@@ -95,6 +96,38 @@ lpa2-taller3
    - API: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
    - Documentación *Swagger UI*: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
    - Documentación *ReDoc*: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+
+## Frontend
+
+El frontend es una SPA construida con React, TypeScript, Vite y Tailwind CSS. Actualmente contiene la landing page visual y usa datos locales de demostración; todavía no está conectado a la API.
+
+### Instalación
+
+```bash
+cd frontend
+npm ci
+```
+
+### Desarrollo
+
+```bash
+npm run dev
+```
+
+La interfaz queda disponible en `http://localhost:5173`.
+
+### Verificación
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
+
+Para el smoke test en Chromium, instalalo una vez con `npx playwright install chromium` y ejecutá `npm run test:e2e`.
+
+Las instrucciones completas del frontend están en [`frontend/README.md`](frontend/README.md).
 
 ## Uso de la API
 
