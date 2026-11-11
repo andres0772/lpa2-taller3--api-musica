@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from musica_api.config import get_settings
 from musica_api.database import create_db_and_tables
 from musica_api.routers import (
+    auth_router,
     canciones_router,
     favoritos_anidados_router,
     favoritos_router,
@@ -89,6 +90,7 @@ app.include_router(usuarios_router)
 app.include_router(canciones_router)
 app.include_router(favoritos_router)
 app.include_router(favoritos_anidados_router)
+app.include_router(auth_router)
 
 # Servir el audio demo referenceado por el seed (scripts/seed_data.sql)
 # Los archivos se generan con scripts/generate_demo_audio.py

@@ -99,9 +99,36 @@ class Usuario(UsuarioBase, table=True):
     fecha_registro: datetime = Field(
         default_factory=utc_now, nullable=False, description="Fecha de registro en UTC"
     )
+    # Hash de la contraseña (PBKDF2). NULL para usuarios seed sin acceso.
+    password_hash: str | None = Field(
+        default=None,
+        nullable=True,
+        max_length=300,
+        description="Hash verificable de la contraseña; NULL si no puede iniciar sesión",
+    )
 
     # Relación: un usuario tiene muchos favoritos
     favoritos: list[Favorito] = Relationship(back_populates="usuario", cascade_delete=True)
+    sesiones: list[Sesion] = Relationship(
+        back_populates="usuario",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+    )
+
+
+class Sesion(SQLModel, table=True):
+    """Sesión de login: token opaco guardado solo como SHA-256."""
+
+    __tablename__ = "sesion"
+
+    id: int | None = Field(default=None, primary_key=True)
+    usuario_id: int = Field(foreign_key="usuario.id", description="Usuario dueño de la sesión")
+    token_hash: str = Field(
+        unique=True, index=True, max_length=64, description="SHA-256 del token entregado"
+    )
+    creada: datetime = Field(default_factory=utc_now, nullable=False, description="Creación en UTC")
+    expira: datetime = Field(nullable=False, description="Vencimiento en UTC")
+
+    usuario: Usuario = Relationship(back_populates="sesiones")
 
 
 class UsuarioCreate(UsuarioBase):

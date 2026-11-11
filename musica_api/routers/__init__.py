@@ -5,6 +5,7 @@ Exporta los routers de usuarios, canciones y favoritos
 para ser registrados en main.py.
 """
 
+from musica_api.routers.auth import router as auth_router
 from musica_api.routers.canciones import router as canciones_router
 from musica_api.routers.favoritos import router as favoritos_router
 from musica_api.routers.favoritos_anidados import router as favoritos_anidados_router
@@ -15,4 +16,5 @@ __all__ = [
     "canciones_router",
     "favoritos_router",
     "favoritos_anidados_router",
+    "auth_router",
 ]
