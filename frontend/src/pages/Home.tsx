@@ -11,6 +11,7 @@ const DEMO_USER_ID = 1;
 
 export default function Home() {
   const [canciones, setCanciones] = useState<Cancion[]>(DEMO_SONGS);
+  const [featuredId, setFeaturedId] = useState<number | null>(null);
   const [apiConnected, setApiConnected] = useState(false);
   const [favoriteState, setFavoriteState] = useState<
     "idle" | "saving" | "saved" | "error"
@@ -36,7 +37,8 @@ export default function Home() {
     };
   }, []);
 
-  const featured = canciones[0] ?? DEMO_SONGS[0];
+  const featured =
+    canciones.find((cancion) => cancion.id === featuredId) ?? canciones[0] ?? DEMO_SONGS[0];
   const secondarySongs = canciones.slice(1, 4);
 
   async function togglePlayback() {
@@ -50,6 +52,17 @@ export default function Home() {
       audio.pause();
       setIsPlaying(false);
     }
+  }
+
+  function seleccionarDestacada(song: Cancion) {
+    setFeaturedId(song.id);
+
+    const reducedMotion = window.matchMedia
+      ?.("(prefers-reduced-motion: reduce)")
+      .matches;
+    document
+      .querySelector(".performance")
+      ?.scrollIntoView?.({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
   }
 
   async function saveFeatured() {
@@ -179,7 +192,11 @@ export default function Home() {
             </header>
 
             <div className="editorial-grid">
-              <a className="lead-card" href="#featured">
+              <button
+                className="lead-card"
+                type="button"
+                onClick={() => seleccionarDestacada(featured)}
+              >
                 <span className="lead-art" aria-hidden="true">
                   <svg viewBox="0 0 160 160" fill="none">
                     <circle cx="80" cy="80" r="58" stroke="currentColor" strokeOpacity=".32" />
@@ -211,11 +228,16 @@ export default function Home() {
                   </div>
                   <span className="lead-action">Escuchar la selección →</span>
                 </div>
-              </a>
+              </button>
 
               <div className="secondary-stack">
                 {secondarySongs.map((song, index) => (
-                  <a className="secondary-card" href="#featured" key={song.id}>
+                  <button
+                    className="secondary-card"
+                    type="button"
+                    key={song.id}
+                    onClick={() => seleccionarDestacada(song)}
+                  >
                     <span className="secondary-cover" aria-hidden="true">
                       {String(index + 2).padStart(2, "0")}
                     </span>
@@ -232,7 +254,7 @@ export default function Home() {
                     <span className="secondary-arrow" aria-hidden="true">
                       ↗
                     </span>
-                  </a>
+                  </button>
                 ))}
               </div>
             </div>

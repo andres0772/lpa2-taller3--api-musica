@@ -1,4 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Home from "@/pages/Home";
 
@@ -94,14 +95,38 @@ describe("Home", () => {
       within(discovery).getByRole("heading", { name: "Bohemian Rhapsody" }),
     ).toBeInTheDocument();
     expect(
-      await within(discovery).findByRole("link", { name: /Billie Jean/ }),
+      await within(discovery).findByRole("button", { name: /Billie Jean/ }),
     ).toBeInTheDocument();
     expect(
-      await within(discovery).findByRole("link", { name: /Take Five/ }),
+      await within(discovery).findByRole("button", { name: /Take Five/ }),
     ).toBeInTheDocument();
     expect(
-      await within(discovery).findByRole("link", { name: /One More Time/ }),
+      await within(discovery).findByRole("button", { name: /One More Time/ }),
     ).toBeInTheDocument();
+  });
+
+  it("selects the featured track from the editorial cards", async () => {
+    render(<Home />);
+
+    const player = screen.getByRole("region", { name: "Canción destacada" });
+    expect(
+      within(player).getByRole("heading", { name: "Bohemian Rhapsody" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(await screen.findByRole("button", { name: /Billie Jean/ }));
+
+    await waitFor(() => {
+      expect(
+        within(player).getByRole("heading", { name: "Billie Jean" }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("keeps the editorial collection free of dead anchors", async () => {
+    render(<Home />);
+
+    await screen.findAllByRole("heading", { name: "Bohemian Rhapsody" });
+    expect(document.querySelector('a[href="#featured"]')).toBeNull();
   });
 
   it("offers a favorites destination in the primary navigation", () => {
