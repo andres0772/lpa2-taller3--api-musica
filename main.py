@@ -1,9 +1,11 @@
 import logging
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from musica_api.config import get_settings
 from musica_api.database import create_db_and_tables
@@ -87,6 +89,11 @@ app.include_router(usuarios_router)
 app.include_router(canciones_router)
 app.include_router(favoritos_router)
 app.include_router(favoritos_anidados_router)
+
+# Servir el audio demo referenceado por el seed (scripts/seed_data.sql)
+# Los archivos se generan con scripts/generate_demo_audio.py
+AUDIO_DIR = Path(__file__).resolve().parent / "media" / "audio"
+app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
 
 
 # Crear un endpoint raíz que retorne información básica de la API
