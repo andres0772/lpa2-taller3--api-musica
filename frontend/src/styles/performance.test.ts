@@ -65,6 +65,11 @@ describe("scroll and interaction performance", () => {
 });
 
 describe("favorites visual balance", () => {
+  it("centers both flanks around the disc axis", () => {
+    expect(ruleBody(luminousCss, ".archive-index")).toContain("align-self: center");
+    expect(ruleBody(luminousCss, ".now-playing")).toContain("justify-content: center");
+  });
+
   it("gives the archive index the same panel weight as the now-playing card", () => {
     const index = ruleBody(luminousCss, ".archive-index");
     const nowCard =
