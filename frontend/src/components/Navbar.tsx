@@ -1,30 +1,49 @@
-export function Navbar() {
+interface NavbarProps {
+  active?: "home" | "favorites";
+}
+
+export function Navbar({ active = "home" }: NavbarProps) {
   return (
-    <nav className="fixed top-0 w-full z-50 px-6 py-4">
-      <div className="max-w-7xl mx-auto glass rounded-2xl px-4 py-2 flex justify-between items-center">
-        <div className="text-2xl font-black tracking-tighter text-white">
-          YOUR<span className="text-indigo-400">MUSIC</span>
-        </div>
-        <div className="hidden md:flex gap-6 text-sm text-slate-400 font-medium">
-          <a href="#" className="hover:text-white transition-colors">
-            Home
+    <header className="site-header">
+      <div className="site-nav">
+        <a className="brand-mark" href="/" aria-label="YourMusic, inicio">
+          <span className="brand-symbol" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M9 18V6l10-2v12"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <circle cx="6" cy="18" r="3" fill="currentColor" />
+              <circle cx="16" cy="16" r="3" fill="currentColor" />
+            </svg>
+          </span>
+          <span>YOURMUSIC</span>
+        </a>
+
+        <nav className="nav-links" aria-label="Navegación principal">
+          <a href="/" aria-current={active === "home" ? "page" : undefined}>
+            Inicio
           </a>
-          <a href="#" className="hover:text-white transition-colors">
-            Canciones
-          </a>
-          <a href="#" className="hover:text-white transition-colors">
+          <a href="/#discovery">Canciones</a>
+          <a
+            href="/favoritos"
+            aria-current={active === "favorites" ? "page" : undefined}
+          >
             Favoritos
           </a>
-        </div>
-        <div className="flex gap-3">
-          <button className="px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-sm border border-white/10 transition-all">
+        </nav>
+
+        <div className="nav-actions">
+          <a className="nav-login" href="#cuenta">
             Iniciar sesión
-          </button>
-          <button className="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-sm transition-all shadow-lg shadow-indigo-500/20">
-            Regístrate
-          </button>
+          </a>
+          <a className="nav-primary" href="/#discovery">
+            Explorar catálogo
+          </a>
         </div>
       </div>
-    </nav>
+    </header>
   );
 }

@@ -6,19 +6,21 @@ describe("Navbar", () => {
   it("renders the primary navigation and account actions", () => {
     render(<Navbar />);
 
-    expect(screen.getByRole("navigation")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "#");
+    expect(screen.getByRole("banner")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Navegación principal" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Inicio" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "Canciones" })).toHaveAttribute(
       "href",
-      "#",
+      "/#discovery",
     );
     expect(screen.getByRole("link", { name: "Favoritos" })).toHaveAttribute(
       "href",
-      "#",
+      "/favoritos",
     );
-    expect(
-      screen.getByRole("button", { name: "Iniciar sesión" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Regístrate" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Iniciar sesión" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Explorar catálogo" })).toHaveAttribute(
+      "href",
+      "/#discovery",
+    );
   });
 });
