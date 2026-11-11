@@ -137,6 +137,10 @@ venv.bak/
 musica.db
 odd/
 
+# Frontend
+node_modules/
+frontend/video/
+
 
 # Spyder project settings
 .spyderproject
