@@ -1,24 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
-import { useSesion } from "@/hooks/useSesion";
 import { useAudioWaveform } from "@/hooks/useAudioWaveform";
 import {
   audioUrl,
-  crearFavorito,
   listCanciones,
   type Cancion,
 } from "@/api/music";
 import { DEMO_SONGS } from "@/data/demoSongs";
 
 export default function Home() {
-  const { usuarioId } = useSesion();
   const [canciones, setCanciones] = useState<Cancion[]>(DEMO_SONGS);
   const [featuredId, setFeaturedId] = useState<number | null>(null);
   const [apiConnected, setApiConnected] = useState(false);
-  const [favoriteState, setFavoriteState] = useState<
-    "idle" | "saving" | "saved" | "error"
-  >("idle");
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const waveRef = useRef<HTMLDivElement>(null);
@@ -77,19 +70,6 @@ export default function Home() {
     document
       .querySelector(".performance")
       ?.scrollIntoView?.({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
-  }
-
-  async function saveFeatured() {
-    setFavoriteState("saving");
-
-    try {
-      await crearFavorito(usuarioId, featured.id);
-      setFavoriteState("saved");
-      toast.success("Canción guardada en favoritos");
-    } catch {
-      setFavoriteState("error");
-      toast.error("No pudimos guardar la canción");
-    }
   }
 
   return (
@@ -301,20 +281,6 @@ export default function Home() {
             ? "Catálogo conectado a la API"
             : "Vista de demostración · API no disponible"}
         </span>
-        <button
-          className="save-favorite"
-          type="button"
-          onClick={saveFeatured}
-          disabled={!apiConnected || favoriteState === "saving"}
-        >
-          {favoriteState === "saved"
-            ? "Guardada en favoritos"
-            : favoriteState === "error"
-              ? "No se pudo guardar"
-              : favoriteState === "saving"
-                ? "Guardando…"
-                : "Guardar en favoritos"}
-        </button>
       </footer>
     </div>
   );

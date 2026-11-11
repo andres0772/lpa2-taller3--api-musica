@@ -20,13 +20,6 @@ type VentanaConWebAudio = Window & {
 // cachear evita el InvalidStateError si el mismo audio se reengancha.
 const fuentes = new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>();
 
-function escala(index: number, total: number, nivel: number): string {
-  const amplitud = 0.22 + Math.min(1, nivel / 190) * 1.05;
-  void index;
-  void total;
-  return `scaleY(${amplitud.toFixed(3)})`;
-}
-
 export function useAudioWaveform(
   audioRef: { current: HTMLAudioElement | null },
   waveRef: { current: HTMLElement | null },
@@ -35,6 +28,8 @@ export function useAudioWaveform(
   const contextoRef = useRef<AudioContext | null>(null);
   const analizadorRef = useRef<AnalyserNode | null>(null);
   const frameRef = useRef<number | null>(null);
+  const ultimos = useRef<number[]>([]);
+  const salto = useRef(0);
 
   // El contexto se crea al montar (barato y sin gesto): en el click solo
   // queda conectarlo y resumirlo, que es lo que produce el tirón inicial.
@@ -87,8 +82,14 @@ export function useAudioWaveform(
     barras.forEach((barra, index) => {
       // Repartir las barras sobre el 70% útil del espectro (agudos pesan poco)
       const bucket = Math.floor((index / barras.length) * datos.length * 0.7);
-      const nivel = datos[Math.min(bucket, datos.length - 1)] ?? 0;
-      barra.style.transform = escala(index, barras.length, nivel);
+      const nivel = (datos[Math.min(bucket, datos.length - 1)] ?? 0) / 190;
+      const previo = ultimos.current[index] ?? -1;
+      // Umbral: si el cambio no se percibe, no reescribimos la barra.
+      if (Math.abs(nivel - previo) < 0.04) {
+        return;
+      }
+      ultimos.current[index] = nivel;
+      barra.style.transform = `scaleY(${(0.22 + Math.min(1, nivel) * 1.05).toFixed(3)})`;
     });
   }, [waveRef]);
 
@@ -118,15 +119,19 @@ export function useAudioWaveform(
       analizador.connect(contexto.destination);
 
       if (contexto.state === "suspended") {
-        void contexto.resume();
+        void contexto.resume().catch(() => undefined);
       }
 
       contenedor.setAttribute("data-live", "true");
       setLive(true);
 
       if (frameRef.current === null && typeof requestAnimationFrame === "function") {
+        // Mitad de frames: 30fps le sobra a la barra y alivia los recalcos.
         const paso = () => {
-          muestrear();
+          if (salto.current === 0) {
+            muestrear();
+          }
+          salto.current = (salto.current + 1) % 2;
           frameRef.current = requestAnimationFrame(paso);
         };
         frameRef.current = requestAnimationFrame(paso);
@@ -144,6 +149,11 @@ export function useAudioWaveform(
     limpiarBarras();
   }, [detenerMuestreo, limpiarBarras]);
 
+  const limpiarAlDesmontar = useCallback(() => {
+    ultimos.current = [];
+    salto.current = 0;
+  }, []);
+
   useEffect(() => {
     return () => {
       if (frameRef.current !== null) {
@@ -152,8 +162,9 @@ export function useAudioWaveform(
       }
       analizadorRef.current?.disconnect();
       analizadorRef.current = null;
+      limpiarAlDesmontar();
     };
-  }, []);
+  }, [limpiarAlDesmontar]);
 
   return { live, start, stop };
 }

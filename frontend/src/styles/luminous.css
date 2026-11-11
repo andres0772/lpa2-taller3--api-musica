@@ -183,6 +183,14 @@
   min-height: 620px;
   display: grid;
   place-items: center;
+  contain: paint;
+}
+
+/* Con el disco girando, el ambiente de fondo se apaga: durante la
+   reproducción solo se animan el disco y el waveform. */
+.luminous-stage[data-playing="true"] .luminous-orbit,
+.luminous-stage[data-playing="true"] .floating-glyph {
+  animation: none;
 }
 
 .luminous-label {
@@ -359,8 +367,7 @@
 .archive-state {
   padding: 24px;
   border: 1px solid var(--color-border-glass-hover);
-  background: var(--color-bg-card);
-  backdrop-filter: blur(24px) saturate(180%);
+  background: color-mix(in srgb, var(--color-bg-deep) 88%, var(--color-accent-indigo) 12%);
   box-shadow: 0 12px 40px var(--color-bg-deep);
 }
 
