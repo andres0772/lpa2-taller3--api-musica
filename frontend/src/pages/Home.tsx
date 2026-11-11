@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
+import { useSesion } from "@/hooks/useSesion";
 import { useAudioWaveform } from "@/hooks/useAudioWaveform";
 import {
   audioUrl,
@@ -10,9 +11,8 @@ import {
 } from "@/api/music";
 import { DEMO_SONGS } from "@/data/demoSongs";
 
-const DEMO_USER_ID = 1;
-
 export default function Home() {
+  const { usuarioId } = useSesion();
   const [canciones, setCanciones] = useState<Cancion[]>(DEMO_SONGS);
   const [featuredId, setFeaturedId] = useState<number | null>(null);
   const [apiConnected, setApiConnected] = useState(false);
@@ -83,7 +83,7 @@ export default function Home() {
     setFavoriteState("saving");
 
     try {
-      await crearFavorito(DEMO_USER_ID, featured.id);
+      await crearFavorito(usuarioId, featured.id);
       setFavoriteState("saved");
       toast.success("Canción guardada en favoritos");
     } catch {

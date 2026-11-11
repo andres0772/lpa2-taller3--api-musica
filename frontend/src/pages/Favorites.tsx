@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
+import { useSesion } from "@/hooks/useSesion";
 import { useAudioWaveform } from "@/hooks/useAudioWaveform";
 import {
   audioUrl,
@@ -13,14 +14,13 @@ import {
   type Usuario,
 } from "@/api/music";
 
-const DEMO_USER_ID = 1;
-
 interface SavedTrack {
   favorite: Favorito;
   song: Cancion;
 }
 
 export default function Favorites() {
+  const { usuarioId } = useSesion();
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [tracks, setTracks] = useState<SavedTrack[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -38,8 +38,8 @@ export default function Favorites() {
 
     try {
       const [user, favorites] = await Promise.all([
-        getUsuario(DEMO_USER_ID),
-        getFavoritos(DEMO_USER_ID),
+        getUsuario(usuarioId),
+        getFavoritos(usuarioId),
       ]);
       const savedTracks = await Promise.all(
         favorites.map(async (favorite) => ({
@@ -94,7 +94,7 @@ export default function Favorites() {
     detenerWaveform();
 
     try {
-      await quitarFavorito(DEMO_USER_ID, selected.song.id);
+      await quitarFavorito(usuarioId, selected.song.id);
     } catch {
       toast.error("No pudimos quitar la canción");
       return;

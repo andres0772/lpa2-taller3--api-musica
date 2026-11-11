@@ -1308,3 +1308,49 @@
     width: 100%;
   }
 }
+
+/* Cuenta y sesión */
+.nav-user {
+  align-self: center;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.nav-actions .nav-login {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.login-form {
+  flex-direction: column;
+  align-items: stretch;
+  max-width: 420px;
+}
+
+.login-form .action-primary {
+  min-height: 48px;
+  margin-top: 6px;
+}
+
+.login-error {
+  max-width: 420px;
+  margin-top: 16px;
+  border-color: var(--color-accent-glow);
+}
+
+.login-switch {
+  margin: 22px 0 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.login-switch button {
+  border: 0;
+  padding: 0;
+  color: var(--color-accent-glow);
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}

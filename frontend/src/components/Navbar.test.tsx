@@ -19,7 +19,7 @@ describe("Navbar", () => {
     );
     expect(screen.getByRole("link", { name: "Iniciar sesión" })).toHaveAttribute(
       "href",
-      "/#cuenta",
+      "/login",
     );
     expect(screen.getByRole("link", { name: "Explorar catálogo" })).toHaveAttribute(
       "href",

@@ -1,8 +1,12 @@
+import { useSesion } from "@/hooks/useSesion";
+
 interface NavbarProps {
   active?: "home" | "favorites";
 }
 
 export function Navbar({ active = "home" }: NavbarProps) {
+  const { usuario, logout } = useSesion();
+
   return (
     <header className="site-header">
       <div className="site-nav">
@@ -36,9 +40,22 @@ export function Navbar({ active = "home" }: NavbarProps) {
         </nav>
 
         <div className="nav-actions">
-          <a className="nav-login" href="/#cuenta">
-            Iniciar sesión
-          </a>
+          {usuario ? (
+            <>
+              <span className="nav-user">Hola, {usuario.nombre}</span>
+              <button
+                className="nav-login"
+                type="button"
+                onClick={() => void logout()}
+              >
+                Salir
+              </button>
+            </>
+          ) : (
+            <a className="nav-login" href="/login">
+              Iniciar sesión
+            </a>
+          )}
           <a className="nav-primary" href="/canciones">
             Explorar catálogo
           </a>

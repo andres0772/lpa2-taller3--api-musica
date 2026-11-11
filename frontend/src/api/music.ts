@@ -44,6 +44,15 @@ export function audioUrl(ruta: string | null): string | null {
   return `${API_BASE_URL}${ruta}`;
 }
 
+export interface UsuarioSesion {
+  id: number;
+  nombre: string;
+  correo: string;
+}
+
+const TOKEN_KEY = "yourmusic.token";
+const USUARIO_KEY = "yourmusic.usuario";
+
 async function request<T>(
   path: string,
   options?: RequestInit,
@@ -60,6 +69,75 @@ async function request<T>(
   } catch {
     return undefined as T;
   }
+}
+
+function conToken(token: string | null, body?: unknown): RequestInit {
+  const init: RequestInit = { method: "POST" };
+  if (token) {
+    init.headers = { "X-Session-Token": token };
+  }
+  if (body !== undefined) {
+    init.body = JSON.stringify(body);
+    init.headers = { ...init.headers, "Content-Type": "application/json" };
+  }
+  return init;
+}
+
+export function leerToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function guardarSesion(token: string, usuario: UsuarioSesion): void {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USUARIO_KEY, JSON.stringify(usuario));
+}
+
+export function usuarioGuardado(): UsuarioSesion | null {
+  const crudo = localStorage.getItem(USUARIO_KEY);
+  if (!crudo) {
+    return null;
+  }
+  try {
+    return JSON.parse(crudo) as UsuarioSesion;
+  } catch {
+    return null;
+  }
+}
+
+export function borrarSesion(): void {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USUARIO_KEY);
+}
+
+export async function registrarUsuario(datos: {
+  nombre: string;
+  correo: string;
+  contraseña: string;
+}): Promise<UsuarioSesion> {
+  return request<UsuarioSesion>(
+    "/api/auth/registro",
+    conToken(null, datos),
+  );
+}
+
+export async function iniciarSesion(datos: {
+  correo: string;
+  contraseña: string;
+}): Promise<{ token: string; usuario: UsuarioSesion }> {
+  return request<{ token: string; usuario: UsuarioSesion }>(
+    "/api/auth/login",
+    conToken(null, datos),
+  );
+}
+
+export async function cerrarSesion(token: string): Promise<void> {
+  await request<void>("/api/auth/logout", conToken(token));
+}
+
+export async function usuarioDeToken(token: string): Promise<UsuarioSesion> {
+  return request<UsuarioSesion>("/api/auth/me", {
+    headers: { "X-Session-Token": token },
+  });
 }
 
 export function listCanciones(page = 1, pageSize = 100): Promise<Cancion[]> {

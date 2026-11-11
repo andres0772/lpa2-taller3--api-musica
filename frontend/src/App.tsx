@@ -1,6 +1,7 @@
 import Home from "@/pages/Home";
 import Explore from "@/pages/Explore";
 import Favorites from "@/pages/Favorites";
+import Login from "@/pages/Login";
 import { AppToaster } from "@/components/AppToaster";
 
 function App() {
@@ -12,6 +13,8 @@ function App() {
         <Favorites />
       ) : path.startsWith("/canciones") ? (
         <Explore />
+      ) : path.startsWith("/login") ? (
+        <Login />
       ) : (
         <Home />
       )}

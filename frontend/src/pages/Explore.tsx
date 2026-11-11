@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
+import { useSesion } from "@/hooks/useSesion";
 import {
   buscarCanciones,
   crearFavorito,
@@ -9,7 +10,6 @@ import {
   type Cancion,
 } from "@/api/music";
 
-const DEMO_USER_ID = 1;
 const PAGE_SIZE = 12;
 const DEBOUNCE_MS = 300;
 
@@ -27,6 +27,7 @@ const GENEROS = [
 ];
 
 export default function Explore() {
+  const { usuarioId } = useSesion();
   const [texto, setTexto] = useState(
     () => new URLSearchParams(window.location.search).get("q") ?? "",
   );
@@ -119,11 +120,11 @@ export default function Explore() {
   async function toggleFavorito(song: Cancion) {
     try {
       if (favoritas.includes(song.id)) {
-        await quitarFavorito(DEMO_USER_ID, song.id);
+        await quitarFavorito(usuarioId, song.id);
         setFavoritas((previas) => previas.filter((id) => id !== song.id));
         toast.success("Canción quitada de favoritos");
       } else {
-        await crearFavorito(DEMO_USER_ID, song.id);
+        await crearFavorito(usuarioId, song.id);
         setFavoritas((previas) => [...previas, song.id]);
         toast.success("Canción guardada en favoritos");
       }
