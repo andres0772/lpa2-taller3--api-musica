@@ -85,7 +85,8 @@ src/
 ## Comportamiento actual
 
 - La portada consume `GET /api/canciones` y usa el catálogo demo como fallback.
-- La vista de exploración consume `GET /api/canciones` paginado y `GET /api/canciones/buscar` con los filtros de título/artista y género; permite guardar o quitar favoritos por canción.
+- La vista de exploración consume `GET /api/canciones` paginado y `GET /api/canciones/buscar` con los filtros de título/artista y género; permite guardar o quitar favoritos por canción. El campo único de búsqueda manda el texto a título y artista con `modo=cualquiera` (coincide uno u otro); sin ese modo la API exige que coincidan los dos.
+- Cuando un favorito ya existe, el backend responde 409 con el motivo y la UI muestra ese mensaje tal cual (`ApiError` conserva el `detail`); el estado visible nunca marca como guardada una canción que no lo está.
 - La sesión usa `POST /api/auth/registro|login`, `GET /api/auth/me` y `POST /api/auth/logout`; el token se guarda en `localStorage` y viaja en `X-Session-Token`. Sin sesión, los favoritos usan el usuario demo `id=1`; con sesión, el usuario real.
 - Los reproductores usan `archivo_audio` resuelto contra el origen de la API (`audioUrl`) con `crossOrigin="anonymous"`, y la barra de sonido se alimenta del audio real vía Web Audio, con fallback decorativo.
 - El transporte de audio vive en `hooks/useAudioPlayback.ts`: progreso y duración salen de los eventos nativos del `<audio>` (`timeupdate`, `loadedmetadata`, `emptied`), y `buscar(segundos)` mueve la canción.
@@ -96,3 +97,4 @@ src/
 - La vista de favoritos consume `GET /api/usuarios/1` y `GET /api/usuarios/1/favoritos`.
 - Las canciones guardadas se resuelven mediante `GET /api/canciones/{id}` cuando el endpoint de favoritos no incluye la relación completa.
 - El reproductor usa `archivo_audio` cuando la API loprovee. Las canciones seed actuales no tienen archivo de audio, por lo que la interfaz informa esa ausencia en lugar de simular sonido.
+- Las portadas (`portada`, resuelto con `portadaUrl()` igual que el audio) se generan con `scripts/generate_portadas.py` (SVG determinista por título, con los tokens de diseño del proyecto) y se sirven en `/portadas/<slug>.svg`. Cuando una canción no tiene portada, la UI mantiene el placeholder actual: nunca una imagen rota.

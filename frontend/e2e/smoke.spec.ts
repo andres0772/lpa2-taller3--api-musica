@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const cancion = {
   id: 2,
@@ -12,6 +12,7 @@ const cancion = {
   genero: "Rock",
   fecha_creacion: "2024-01-22T10:30:00Z",
   archivo_audio: "/audio/02-stairway-to-heaven.mp3",
+  portada: "/portadas/02-stairway-to-heaven.svg",
 };
 
 const cancionDos = {
@@ -26,7 +27,20 @@ const cancionDos = {
   genero: "Jazz",
   fecha_creacion: "2024-04-01T10:00:00Z",
   archivo_audio: "/audio/08-take-five.mp3",
+  portada: "/portadas/08-take-five.svg",
 };
+
+// Las portadas son assets reales servidos por la API: se sirven desde el repo
+// igual que el audio, para que la UI nunca muestre una imagen rota.
+async function mockPortadas(page: Page) {
+  await page.route("**/portadas/**", async (route) => {
+    const nombre = route.request().url().split("/portadas/")[1] ?? "";
+    await route.fulfill({
+      path: new URL(`../../media/portadas/${nombre}`, import.meta.url).pathname,
+      contentType: "image/svg+xml",
+    });
+  });
+}
 
 const usuario = {
   id: 1,
@@ -68,10 +82,17 @@ test("loads the cinematic YourMusic landing page without browser errors", async 
       contentType: "audio/mpeg",
     });
   });
+  await mockPortadas(page);
 
   const response = await page.goto("/");
 
   expect(response?.status()).toBe(200);
+  // La portada real de la canción se ve en la tarjeta editorial.
+  await expect(page.locator(".lead-art img")).toBeVisible();
+  await expect(page.locator(".lead-art img")).toHaveAttribute(
+    "src",
+    "http://127.0.0.1:8000/portadas/02-stairway-to-heaven.svg",
+  );
   await expect(
     page.getByRole("heading", {
       level: 1,
@@ -110,6 +131,7 @@ test("opens saved music in the luminous favorites view", async ({ page }) => {
   await page.route("**/api/canciones/2", async (route) => {
     await route.fulfill({ json: cancion });
   });
+  await mockPortadas(page);
 
   const response = await page.goto("/favoritos");
 
@@ -126,6 +148,11 @@ test("opens saved music in the luminous favorites view", async ({ page }) => {
   await expect(page.locator("audio")).toHaveAttribute(
     "src",
     "http://127.0.0.1:8000/audio/02-stairway-to-heaven.mp3",
+  );
+  await expect(page.locator("img.now-cover")).toBeVisible();
+  await expect(page.locator("img.now-cover")).toHaveAttribute(
+    "src",
+    "http://127.0.0.1:8000/portadas/02-stairway-to-heaven.svg",
   );
 });
 
@@ -144,6 +171,7 @@ test("explores the catalog with debounced search and filter deep links", async (
   await page.route("**/api/canciones**", async (route) => {
     await route.fulfill({ json: [cancion, cancionDos] });
   });
+  await mockPortadas(page);
 
   await page.goto("/canciones?q=led+zeppelin&genero=Rock");
 
@@ -331,6 +359,7 @@ test("registers, scopes favorites to the session user and logs out", async ({
   await page.route("**/api/canciones**", async (route) => {
     await route.fulfill({ json: [cancion, cancionDos] });
   });
+  await mockPortadas(page);
 
   await page.goto("/login");
   await page.getByRole("button", { name: "Crear cuenta" }).click();
