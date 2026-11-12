@@ -130,6 +130,39 @@ describe("Explore", () => {
     expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("/api/canciones"))).toBe(true);
   });
 
+  it("shows a seek bar and advances to the next catalog song", async () => {
+    const conAudio = canciones.map((song, index) => ({
+      ...song,
+      archivo_audio: `/audio/0${index + 1}-demo.mp3`,
+    }));
+    mockApi({ canciones: conAudio });
+
+    const { container } = render(<Explore />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reproducir Bohemian Rhapsody" }),
+    );
+
+    expect(
+      await screen.findByLabelText("Buscar posición dentro de la canción"),
+    ).toBeDisabled();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Canción siguiente a Bohemian Rhapsody" }),
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector(".explore-audio")).toHaveAttribute(
+        "src",
+        "http://127.0.0.1:8000/audio/02-demo.mp3",
+      );
+    });
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Pausar Billie Jean" }),
+      ).toBeInTheDocument();
+    });
+  });
+
   it("lists the catalog from the API", async () => {
     const fetchMock = mockApi();
 

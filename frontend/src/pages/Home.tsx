@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Navbar } from "@/components/Navbar";
+import { SeekBar } from "@/components/SeekBar";
 import { useAudioWaveform } from "@/hooks/useAudioWaveform";
+import { useAudioPlayback } from "@/hooks/useAudioPlayback";
+import { anteriorCancion, siguienteCancion } from "@/utils/cola";
 import {
   audioUrl,
   listCanciones,
@@ -19,6 +22,15 @@ export default function Home() {
     audioRef,
     waveRef,
   );
+  const { progreso, duracion, buscar } = useAudioPlayback(audioRef, {
+    onEnded: () => {
+      setIsPlaying(false);
+      detenerWaveform();
+    },
+  });
+  // Los botones de siguiente/anterior piden reproducir: el flag espera a que
+  // el elemento cargue el nuevo src antes de llamar play().
+  const reproducirAlCambiar = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -42,6 +54,20 @@ export default function Home() {
     canciones.find((cancion) => cancion.id === featuredId) ?? canciones[0] ?? DEMO_SONGS[0];
   const secondarySongs = canciones.slice(1, 4);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!reproducirAlCambiar.current || !audio || !featured.archivo_audio) {
+      return;
+    }
+    reproducirAlCambiar.current = false;
+    void Promise.resolve(audio.play())
+      .then(() => {
+        setIsPlaying(true);
+        iniciarWaveform();
+      })
+      .catch(() => setIsPlaying(false));
+  }, [featured.archivo_audio]);
+
   async function togglePlayback() {
     const audio = audioRef.current;
     if (!audio || !featured.archivo_audio) return;
@@ -55,6 +81,11 @@ export default function Home() {
       setIsPlaying(false);
       detenerWaveform();
     }
+  }
+
+  function reproducirCancion(song: Cancion) {
+    reproducirAlCambiar.current = true;
+    seleccionarDestacada(song);
   }
 
   function seleccionarDestacada(song: Cancion) {
@@ -126,25 +157,59 @@ export default function Home() {
 
             <div className="glass-player">
               <div className="player-heading">
-                <button
-                  className="play-button"
-                  type="button"
-                  onClick={togglePlayback}
-                  disabled={!featured.archivo_audio}
-                  aria-label={
-                    featured.archivo_audio
-                      ? `${isPlaying ? "Pausar" : "Reproducir"} ${featured.titulo}`
-                      : `Audio no disponible para ${featured.titulo}`
-                  }
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    {isPlaying ? (
-                      <path d="M7 5h4v14H7zm6 0h4v14h-4z" />
-                    ) : (
-                      <path d="M8 5v14l11-7z" />
-                    )}
-                  </svg>
-                </button>
+                <div className="player-controls">
+                  <button
+                    className="skip-button"
+                    type="button"
+                    onClick={() => {
+                      const anterior = anteriorCancion(canciones, featured.id);
+                      if (anterior) {
+                        reproducirCancion(anterior);
+                      }
+                    }}
+                    disabled={canciones.length < 2}
+                    aria-label={`Canción anterior a ${featured.titulo}`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M6 6h2v12H6zm3.5 6L18 6v12z" />
+                    </svg>
+                  </button>
+                  <button
+                    className="play-button"
+                    type="button"
+                    onClick={togglePlayback}
+                    disabled={!featured.archivo_audio}
+                    aria-label={
+                      featured.archivo_audio
+                        ? `${isPlaying ? "Pausar" : "Reproducir"} ${featured.titulo}`
+                        : `Audio no disponible para ${featured.titulo}`
+                    }
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      {isPlaying ? (
+                        <path d="M7 5h4v14H7zm6 0h4v14h-4z" />
+                      ) : (
+                        <path d="M8 5v14l11-7z" />
+                      )}
+                    </svg>
+                  </button>
+                  <button
+                    className="skip-button"
+                    type="button"
+                    onClick={() => {
+                      const siguiente = siguienteCancion(canciones, featured.id);
+                      if (siguiente) {
+                        reproducirCancion(siguiente);
+                      }
+                    }}
+                    disabled={canciones.length < 2}
+                    aria-label={`Canción siguiente a ${featured.titulo}`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z" />
+                    </svg>
+                  </button>
+                </div>
                 <div className="track-copy">
                   <h2>{featured.titulo}</h2>
                   <span>
@@ -167,20 +232,17 @@ export default function Home() {
                   />
                 ))}
               </div>
-              <div className="player-time" aria-hidden="true">
-                <span>0:00</span>
-                <span>{featured.duracion_formato}</span>
-              </div>
+              <SeekBar
+                progreso={progreso}
+                duracion={duracion}
+                onSeek={buscar}
+              />
 
               <audio
                 ref={audioRef}
                 crossOrigin="anonymous"
                 src={audioUrl(featured.archivo_audio) ?? undefined}
                 preload="auto"
-                onEnded={() => {
-                  setIsPlaying(false);
-                  detenerWaveform();
-                }}
               />
             </div>
           </section>

@@ -48,10 +48,11 @@ lpa2-taller3
    - id: Identificador único
    - titulo: Título de la canción
    - artista: Artista o intérprete
-   - album: Álbum al que pertenece
-   - duracion: Duración en segundos
+   - album: Álbum al que pertenece (opcional)
+   - duracion: Duración en formato `mm:ss` (ej: `5:55`; la API también la expone en segundos como `duracion_segundos`)
    - año: Año de lanzamiento
    - genero: Género musical
+   - archivo_audio: Archivo de audio de demostración (opcional, servido por `/audio/<slug>.mp3`)
    - fecha_creacion: Fecha de creación del registro
 
 3. **Favorito**:

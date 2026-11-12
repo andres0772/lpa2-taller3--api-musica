@@ -286,4 +286,109 @@ describe("Favorites", () => {
       "/canciones",
     );
   });
+
+  it("plays the next favorite from the archive queue", async () => {
+    mockFavorites([
+      {
+        id: 7,
+        id_usuario: 1,
+        id_cancion: 2,
+        fecha_marcado: "2024-04-01T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+      {
+        id: 8,
+        id_usuario: 1,
+        id_cancion: 3,
+        fecha_marcado: "2024-04-02T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+    ]);
+
+    const { container } = render(<Favorites />);
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Canción siguiente a Stairway to Heaven",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "Billie Jean" }),
+      ).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(container.querySelector(".luminous-stage")).toHaveAttribute(
+        "data-playing",
+        "true",
+      );
+    });
+    expect(
+      screen.getByRole("button", { name: "Pausar Billie Jean" }),
+    ).toBeInTheDocument();
+  });
+
+  it("plays the previous favorite wrapping around the queue", async () => {
+    mockFavorites([
+      {
+        id: 7,
+        id_usuario: 1,
+        id_cancion: 2,
+        fecha_marcado: "2024-04-01T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+      {
+        id: 8,
+        id_usuario: 1,
+        id_cancion: 3,
+        fecha_marcado: "2024-04-02T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+    ]);
+
+    const { container } = render(<Favorites />);
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Canción anterior a Stairway to Heaven",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "Billie Jean" }),
+      ).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(container.querySelector(".luminous-stage")).toHaveAttribute(
+        "data-playing",
+        "true",
+      );
+    });
+  });
+
+  it("exposes a seek bar in the now card", async () => {
+    mockFavorites([
+      {
+        id: 7,
+        id_usuario: 1,
+        id_cancion: 2,
+        fecha_marcado: "2024-04-01T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+    ]);
+
+    render(<Favorites />);
+
+    const barra = await screen.findByLabelText(
+      "Buscar posición dentro de la canción",
+    );
+    expect(barra).toBeDisabled();
+  });
 });

@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
+import { SeekBar } from "@/components/SeekBar";
 import { useSesion } from "@/hooks/useSesion";
 import { useAudioWaveform } from "@/hooks/useAudioWaveform";
+import { useAudioPlayback } from "@/hooks/useAudioPlayback";
+import { anteriorCancion, siguienteCancion } from "@/utils/cola";
 import {
   audioUrl,
   getCancion,
@@ -32,6 +35,15 @@ export default function Favorites() {
     audioRef,
     waveRef,
   );
+  const { progreso, duracion, buscar } = useAudioPlayback(audioRef, {
+    onEnded: () => {
+      setIsPlaying(false);
+      detenerWaveform();
+    },
+  });
+  // Siguiente/anterior piden reproducir: el flag espera a que el elemento
+  // cargue el nuevo src antes de llamar play().
+  const reproducirAlCambiar = useRef(false);
 
   const loadFavorites = useCallback(async () => {
     setStatus("loading");
@@ -63,6 +75,21 @@ export default function Favorites() {
 
   const selected =
     tracks.find(({ song }) => song.id === selectedId) ?? tracks[0] ?? null;
+  const colaFavoritos = tracks.map(({ song }) => song);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!reproducirAlCambiar.current || !audio || !selected?.song.archivo_audio) {
+      return;
+    }
+    reproducirAlCambiar.current = false;
+    void Promise.resolve(audio.play())
+      .then(() => {
+        setIsPlaying(true);
+        iniciarWaveform();
+      })
+      .catch(() => setIsPlaying(false));
+  }, [selected?.song.archivo_audio]);
 
   async function togglePlayback() {
     const audio = audioRef.current;
@@ -77,6 +104,11 @@ export default function Favorites() {
       setIsPlaying(false);
       detenerWaveform();
     }
+  }
+
+  function reproducir(songId: number) {
+    reproducirAlCambiar.current = true;
+    seleccionar(songId);
   }
 
   function seleccionar(songId: number) {
@@ -236,37 +268,79 @@ export default function Favorites() {
                 ))}
               </div>
 
+              <SeekBar
+                progreso={progreso}
+                duracion={duracion}
+                onSeek={buscar}
+              />
+
               <audio
                 ref={audioRef}
                 crossOrigin="anonymous"
                 src={audioUrl(selected.song.archivo_audio) ?? undefined}
                 preload="auto"
-                onEnded={() => {
-                  setIsPlaying(false);
-                  detenerWaveform();
-                }}
               />
 
               <div className="now-actions">
-                <button
-                  className="now-play"
-                  type="button"
-                  onClick={togglePlayback}
-                  disabled={!selected.song.archivo_audio}
-                  aria-label={
-                    selected.song.archivo_audio
-                      ? `${isPlaying ? "Pausar" : "Reproducir"} ${selected.song.titulo}`
-                      : `Audio no disponible para ${selected.song.titulo}`
-                  }
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    {isPlaying ? (
-                      <path d="M7 5h4v14H7zm6 0h4v14h-4z" />
-                    ) : (
-                      <path d="M8 5v14l11-7z" />
-                    )}
-                  </svg>
-                </button>
+                <div className="now-transport">
+                  <button
+                    className="skip-button"
+                    type="button"
+                    onClick={() => {
+                      const anterior = anteriorCancion(
+                        colaFavoritos,
+                        selected.song.id,
+                      );
+                      if (anterior) {
+                        reproducir(anterior.id);
+                      }
+                    }}
+                    disabled={tracks.length < 2}
+                    aria-label={`Canción anterior a ${selected.song.titulo}`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M6 6h2v12H6zm3.5 6L18 6v12z" />
+                    </svg>
+                  </button>
+                  <button
+                    className="now-play"
+                    type="button"
+                    onClick={togglePlayback}
+                    disabled={!selected.song.archivo_audio}
+                    aria-label={
+                      selected.song.archivo_audio
+                        ? `${isPlaying ? "Pausar" : "Reproducir"} ${selected.song.titulo}`
+                        : `Audio no disponible para ${selected.song.titulo}`
+                    }
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      {isPlaying ? (
+                        <path d="M7 5h4v14H7zm6 0h4v14h-4z" />
+                      ) : (
+                        <path d="M8 5v14l11-7z" />
+                      )}
+                    </svg>
+                  </button>
+                  <button
+                    className="skip-button"
+                    type="button"
+                    onClick={() => {
+                      const siguiente = siguienteCancion(
+                        colaFavoritos,
+                        selected.song.id,
+                      );
+                      if (siguiente) {
+                        reproducir(siguiente.id);
+                      }
+                    }}
+                    disabled={tracks.length < 2}
+                    aria-label={`Canción siguiente a ${selected.song.titulo}`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z" />
+                    </svg>
+                  </button>
+                </div>
                 <button
                   className="remove-favorite"
                   type="button"

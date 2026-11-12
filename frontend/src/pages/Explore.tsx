@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
+import { SeekBar } from "@/components/SeekBar";
 import { useSesion } from "@/hooks/useSesion";
+import { useAudioPlayback } from "@/hooks/useAudioPlayback";
+import { anteriorCancion, siguienteCancion } from "@/utils/cola";
 import {
   audioUrl,
   buscarCanciones,
@@ -44,6 +47,12 @@ export default function Explore() {
   const [cancionActiva, setCancionActiva] = useState<number | null>(null);
   const [reproduciendo, setReproduciendo] = useState(false);
   const audioExplorarRef = useRef<HTMLAudioElement>(null);
+  const { progreso, duracion, buscar: buscarPosicion } = useAudioPlayback(audioExplorarRef, {
+    onEnded: () => {
+      setReproduciendo(false);
+      setCancionActiva(null);
+    },
+  });
 
   const cargar = useCallback(async () => {
     setStatus("loading");
@@ -162,6 +171,8 @@ export default function Explore() {
     await audio.play();
     setReproduciendo(true);
   }
+
+  const activa = canciones.find((song) => song.id === cancionActiva) ?? null;
 
   return (
     <div className="cinematic-page explore-page">
@@ -315,14 +326,54 @@ export default function Explore() {
           </nav>
         )}
 
+        <div className="explore-dock" aria-label="Reproducción en curso" hidden={!activa}>
+          <button
+            className="skip-button"
+            type="button"
+            disabled={!activa}
+            onClick={() => {
+              const anterior = activa ? anteriorCancion(canciones, activa.id) : null;
+              if (anterior) {
+                void alternarCancion(anterior);
+              }
+            }}
+            aria-label={
+              activa ? `Canción anterior a ${activa.titulo}` : "Canción anterior"
+            }
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M6 6h2v12H6zm3.5 6L18 6v12z" />
+            </svg>
+          </button>
+          <SeekBar
+            progreso={progreso}
+            duracion={duracion}
+            onSeek={buscarPosicion}
+          />
+          <button
+            className="skip-button"
+            type="button"
+            disabled={!activa}
+            onClick={() => {
+              const siguiente = activa ? siguienteCancion(canciones, activa.id) : null;
+              if (siguiente) {
+                void alternarCancion(siguiente);
+              }
+            }}
+            aria-label={
+              activa ? `Canción siguiente a ${activa.titulo}` : "Canción siguiente"
+            }
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z" />
+            </svg>
+          </button>
+        </div>
+
         <audio
           ref={audioExplorarRef}
           className="explore-audio"
           preload="none"
-          onEnded={() => {
-            setReproduciendo(false);
-            setCancionActiva(null);
-          }}
         />
       </main>
     </div>

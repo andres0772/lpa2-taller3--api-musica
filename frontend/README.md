@@ -70,10 +70,11 @@ npm run preview
 ```text
 src/
 ├── api/          # Cliente de usuarios, canciones y favoritos
-├── components/   # Navegación compartida
+├── components/   # Navegación compartida y barra de progreso
 ├── data/         # Catálogo demo local
 ├── pages/        # Portada, exploración, favoritos y login
-├── hooks/        # Sesión de usuario y waveform del audio
+├── hooks/        # Sesión de usuario, waveform y transporte del audio
+├── utils/        # Cola de reproducción circular
 ├── styles/       # Composición cinematográfica y luminosa
 ├── test/         # Configuración global de Testing Library
 ├── App.tsx
@@ -87,9 +88,11 @@ src/
 - La vista de exploración consume `GET /api/canciones` paginado y `GET /api/canciones/buscar` con los filtros de título/artista y género; permite guardar o quitar favoritos por canción.
 - La sesión usa `POST /api/auth/registro|login`, `GET /api/auth/me` y `POST /api/auth/logout`; el token se guarda en `localStorage` y viaja en `X-Session-Token`. Sin sesión, los favoritos usan el usuario demo `id=1`; con sesión, el usuario real.
 - Los reproductores usan `archivo_audio` resuelto contra el origen de la API (`audioUrl`) con `crossOrigin="anonymous"`, y la barra de sonido se alimenta del audio real vía Web Audio, con fallback decorativo.
+- El transporte de audio vive en `hooks/useAudioPlayback.ts`: progreso y duración salen de los eventos nativos del `<audio>` (`timeupdate`, `loadedmetadata`, `emptied`), y `buscar(segundos)` mueve la canción.
+- `components/SeekBar.tsx` es la barra de progreso accesible (`input[type=range]` nativo: teclado, foco y lector de pantalla) con tiempo actual y restante; sin duración conocida queda deshabilitada y nunca muestra una posición inventada.
+- Cada vista tiene cola circular con botones de anterior/siguiente: el catálogo cargado en portada y exploración, los favoritos guardados en favoritos; del último se vuelve al primero y viceversa. Al saltar, la canción elegida arranca sola.
 - Las tarjetas editoriales de la portada seleccionan la canción destacada del reproductor en lugar de usar anclas inexistentes.
 - Los discos giran y los waveform se animan solo mientras hay audio en reproducción; toda la animación usa `transform`/`opacity` y respeta `prefers-reduced-motion`.
 - La vista de favoritos consume `GET /api/usuarios/1` y `GET /api/usuarios/1/favoritos`.
 - Las canciones guardadas se resuelven mediante `GET /api/canciones/{id}` cuando el endpoint de favoritos no incluye la relación completa.
 - El reproductor usa `archivo_audio` cuando la API loprovee. Las canciones seed actuales no tienen archivo de audio, por lo que la interfaz informa esa ausencia en lugar de simular sonido.
-- La autenticación todavía no está implementada; el frontend usa el usuario demo `id=1`.
