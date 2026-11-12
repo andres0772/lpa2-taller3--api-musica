@@ -59,6 +59,15 @@ test("loads the cinematic YourMusic landing page without browser errors", async 
   await page.route("**/api/canciones**", async (route) => {
     await route.fulfill({ json: [cancion] });
   });
+  await page.route("**/audio/**", async (route) => {
+    await route.fulfill({
+      path: new URL(
+        "../../media/audio/02-stairway-to-heaven.mp3",
+        import.meta.url,
+      ).pathname,
+      contentType: "audio/mpeg",
+    });
+  });
 
   const response = await page.goto("/");
 
@@ -167,6 +176,118 @@ test("shows loading skeletons before the catalog arrives", async ({ page }) => {
     timeout: 3000,
   });
   await expect(page.locator(".song-skeleton")).toHaveCount(0);
+});
+
+test("plays, seeks and skips through the landing queue", async ({
+  page,
+}) => {
+  const browserErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      browserErrors.push(`console: ${message.text()}`);
+    }
+  });
+  page.on("pageerror", (error) => {
+    browserErrors.push(`pageerror: ${error.message}`);
+  });
+
+  await page.route("**/api/canciones**", async (route) => {
+    await route.fulfill({ json: [cancion, cancionDos] });
+  });
+  await page.route("**/audio/**", async (route) => {
+    const esTakeFive = route.request().url().includes("08-take-five");
+    const archivo = esTakeFive
+      ? new URL("../../media/audio/08-take-five.mp3", import.meta.url)
+      : new URL("../../media/audio/02-stairway-to-heaven.mp3", import.meta.url);
+    await route.fulfill({ path: archivo.pathname, contentType: "audio/mpeg" });
+  });
+
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Reproducir Stairway to Heaven" }).click();
+  await expect(page.locator(".performance")).toHaveAttribute(
+    "data-playing",
+    "true",
+  );
+
+  // El audio real avanza: el reloj del <audio> se mueve solo.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () => document.querySelector<HTMLAudioElement>(".glass-player audio")?.currentTime ?? 0,
+        ),
+      { timeout: 5000 },
+    )
+    .toBeGreaterThan(0.5);
+
+  // Buscar posición mueve la canción al punto elegido.
+  await page.getByLabel("Buscar posición dentro de la canción").fill("5");
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () => document.querySelector<HTMLAudioElement>(".glass-player audio")?.currentTime ?? 0,
+        ),
+      { timeout: 5000 },
+    )
+    .toBeGreaterThan(4);
+
+  // Siguiente: cambia la canción destacada y sigue sonando.
+  await page.getByRole("button", { name: "Canción siguiente a Stairway to Heaven" }).click();
+  await expect(
+    page
+      .getByRole("region", { name: "Canción destacada" })
+      .getByRole("heading", { name: "Take Five" }),
+  ).toBeVisible();
+  await expect(page.locator(".performance")).toHaveAttribute(
+    "data-playing",
+    "true",
+  );
+  await expect(page.locator(".glass-player audio")).toHaveAttribute(
+    "src",
+    "http://127.0.0.1:8000/audio/08-take-five.mp3",
+  );
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () => document.querySelector<HTMLAudioElement>(".glass-player audio")?.currentTime ?? 0,
+        ),
+      { timeout: 5000 },
+    )
+    .toBeGreaterThan(0.5);
+
+  expect(browserErrors).toEqual([]);
+});
+
+test("advances the exploration queue from the player dock", async ({ page }) => {
+  await page.route("**/api/canciones**", async (route) => {
+    await route.fulfill({ json: [cancion, cancionDos] });
+  });
+  await page.route("**/audio/**", async (route) => {
+    const esTakeFive = route.request().url().includes("08-take-five");
+    const archivo = esTakeFive
+      ? new URL("../../media/audio/08-take-five.mp3", import.meta.url)
+      : new URL("../../media/audio/02-stairway-to-heaven.mp3", import.meta.url);
+    await route.fulfill({ path: archivo.pathname, contentType: "audio/mpeg" });
+  });
+
+  await page.goto("/canciones");
+
+  await page.getByRole("button", { name: "Reproducir Stairway to Heaven" }).click();
+
+  const barra = page.getByLabel("Buscar posición dentro de la canción");
+  await expect(barra).toBeEnabled({ timeout: 5000 });
+
+  await page.getByRole("button", { name: "Canción siguiente a Stairway to Heaven" }).click();
+  await expect(page.locator(".explore-audio")).toHaveAttribute(
+    "src",
+    "http://127.0.0.1:8000/audio/08-take-five.mp3",
+  );
+  await expect(
+    page.getByRole("button", { name: "Pausar Take Five" }),
+  ).toBeVisible();
 });
 
 test("registers, scopes favorites to the session user and logs out", async ({
