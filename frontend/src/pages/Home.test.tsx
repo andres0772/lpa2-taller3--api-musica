@@ -281,6 +281,75 @@ describe("Home", () => {
     });
   });
 
+  it("plays the next track from the queue when pressing next", async () => {
+    const { container } = render(<Home />);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Reproducir Bohemian Rhapsody" }),
+    );
+    await waitFor(() => {
+      expect(container.querySelector(".performance")).toHaveAttribute(
+        "data-playing",
+        "true",
+      );
+    });
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Canción siguiente a Bohemian Rhapsody",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(
+        within(
+          screen.getByRole("region", { name: "Canción destacada" }),
+        ).getByRole("heading", { name: "Billie Jean" }),
+      ).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(container.querySelector(".performance")).toHaveAttribute(
+        "data-playing",
+        "true",
+      );
+    });
+    expect(
+      screen.getByRole("button", { name: "Pausar Billie Jean" }),
+    ).toBeInTheDocument();
+  });
+
+  it("plays the previous track from the queue when pressing previous", async () => {
+    const { container } = render(<Home />);
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Canción anterior a Bohemian Rhapsody",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(
+        within(
+          screen.getByRole("region", { name: "Canción destacada" }),
+        ).getByRole("heading", { name: "One More Time" }),
+      ).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(container.querySelector(".performance")).toHaveAttribute(
+        "data-playing",
+        "true",
+      );
+    });
+  });
+
+  it("exposes a seek bar in the hero player", async () => {
+    render(<Home />);
+
+    const barra =
+      await screen.findByLabelText("Buscar posición dentro de la canción");
+    expect(barra).toBeDisabled();
+  });
+
   it("keeps the editorial collection free of dead anchors", async () => {
     render(<Home />);
 
