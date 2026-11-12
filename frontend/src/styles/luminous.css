@@ -382,6 +382,16 @@
   text-transform: uppercase;
 }
 
+.now-cover {
+  display: block;
+  width: 96px;
+  height: 96px;
+  margin-bottom: 16px;
+  border: 1px solid var(--color-border-glass-hover);
+  border-radius: 10px;
+  object-fit: cover;
+}
+
 .now-card h2,
 .archive-state h2 {
   margin: 20px 0 7px;

@@ -12,6 +12,7 @@ import {
   getFavoritos,
   getUsuario,
   quitarFavorito,
+  portadaUrl,
   type Cancion,
   type Favorito,
   type Usuario,
@@ -76,6 +77,7 @@ export default function Favorites() {
   const selected =
     tracks.find(({ song }) => song.id === selectedId) ?? tracks[0] ?? null;
   const colaFavoritos = tracks.map(({ song }) => song);
+  const portadaSeleccionada = selected ? portadaUrl(selected.song.portada) : null;
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -240,6 +242,14 @@ export default function Favorites() {
             </div>
           ) : selected ? (
             <article className="now-card">
+              {portadaSeleccionada ? (
+                <img
+                  className="now-cover"
+                  src={portadaSeleccionada}
+                  alt=""
+                  loading="lazy"
+                />
+              ) : null}
               <div className="now-kicker">
                 <span>En reproducción</span>
                 <span>{selected.song.duracion_formato}</span>

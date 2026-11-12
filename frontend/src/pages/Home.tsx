@@ -7,6 +7,7 @@ import { anteriorCancion, siguienteCancion } from "@/utils/cola";
 import {
   audioUrl,
   listCanciones,
+  portadaUrl,
   type Cancion,
 } from "@/api/music";
 import { DEMO_SONGS } from "@/data/demoSongs";
@@ -53,6 +54,9 @@ export default function Home() {
   const featured =
     canciones.find((cancion) => cancion.id === featuredId) ?? canciones[0] ?? DEMO_SONGS[0];
   const secondarySongs = canciones.slice(1, 4);
+  // Portadas deterministas del catálogo: sin portada se mantiene el
+  // placeholder visual actual (svg dibujado / número), nunca un <img> roto.
+  const portadaDestacada = portadaUrl(featured.portada);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -272,12 +276,21 @@ export default function Home() {
                 onClick={() => seleccionarDestacada(featured)}
               >
                 <span className="lead-art" aria-hidden="true">
-                  <svg viewBox="0 0 160 160" fill="none">
-                    <circle cx="80" cy="80" r="58" stroke="currentColor" strokeOpacity=".32" />
-                    <circle cx="80" cy="80" r="40" stroke="currentColor" strokeOpacity=".52" />
-                    <path d="M20 102c20-38 31 24 52-12 16-27 31 18 68-24" stroke="currentColor" strokeWidth="2" />
-                    <circle cx="80" cy="80" r="4" fill="currentColor" />
-                  </svg>
+                  {portadaDestacada ? (
+                    <img
+                      className="lead-cover"
+                      src={portadaDestacada}
+                      alt=""
+                      loading="lazy"
+                    />
+                  ) : (
+                    <svg viewBox="0 0 160 160" fill="none">
+                      <circle cx="80" cy="80" r="58" stroke="currentColor" strokeOpacity=".32" />
+                      <circle cx="80" cy="80" r="40" stroke="currentColor" strokeOpacity=".52" />
+                      <path d="M20 102c20-38 31 24 52-12 16-27 31 18 68-24" stroke="currentColor" strokeWidth="2" />
+                      <circle cx="80" cy="80" r="4" fill="currentColor" />
+                    </svg>
+                  )}
                   <span className="lead-number">01</span>
                 </span>
                 <div className="lead-copy">
@@ -305,7 +318,10 @@ export default function Home() {
               </button>
 
               <div className="secondary-stack">
-                {secondarySongs.map((song, index) => (
+                {secondarySongs.map((song, index) => {
+                  const portada = portadaUrl(song.portada);
+
+                  return (
                   <button
                     className="secondary-card"
                     type="button"
@@ -313,7 +329,11 @@ export default function Home() {
                     onClick={() => seleccionarDestacada(song)}
                   >
                     <span className="secondary-cover" aria-hidden="true">
-                      {String(index + 2).padStart(2, "0")}
+                      {portada ? (
+                        <img src={portada} alt="" loading="lazy" />
+                      ) : (
+                        String(index + 2).padStart(2, "0")
+                      )}
                     </span>
                     <span className="secondary-copy">
                       <strong>{song.titulo}</strong>
@@ -329,7 +349,8 @@ export default function Home() {
                       ↗
                     </span>
                   </button>
-                ))}
+                );
+                })}
               </div>
             </div>
           </div>

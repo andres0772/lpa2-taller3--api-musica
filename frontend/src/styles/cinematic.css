@@ -717,6 +717,14 @@
   opacity: 0.86;
 }
 
+.lead-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .lead-number {
   position: absolute;
   left: 18px;
@@ -840,6 +848,13 @@
 
 .secondary-card:nth-child(3) .secondary-cover {
   background: linear-gradient(135deg, var(--color-accent-glow), var(--color-accent-indigo));
+}
+
+.secondary-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .secondary-copy {
@@ -1229,11 +1244,19 @@
   height: 46px;
   display: grid;
   place-items: center;
+  overflow: hidden;
   color: var(--color-text-main);
   background: linear-gradient(135deg, var(--color-accent-indigo), var(--color-bg-deep));
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
+}
+
+.song-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .song-copy h3 {

@@ -22,6 +22,7 @@ const cancionDos = {
   genero: "Rock",
   fecha_creacion: "2024-01-22T10:30:00Z",
   archivo_audio: "/audio/stairway.mp3",
+  portada: "/portadas/02-stairway-to-heaven.svg",
 };
 
 const cancionTres = {
@@ -390,5 +391,44 @@ describe("Favorites", () => {
       "Buscar posición dentro de la canción",
     );
     expect(barra).toBeDisabled();
+  });
+
+  it("shows the generated cover in the now card, keeping the card clean without one", async () => {
+    mockFavorites([
+      {
+        id: 7,
+        id_usuario: 1,
+        id_cancion: 2,
+        fecha_marcado: "2024-04-01T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+    ]);
+
+    const { container } = render(<Favorites />);
+    await screen.findByRole("heading", { name: "Stairway to Heaven" });
+
+    expect(container.querySelector(".now-card img")).toHaveAttribute(
+      "src",
+      "http://127.0.0.1:8000/portadas/02-stairway-to-heaven.svg",
+    );
+  });
+
+  it("keeps the now card image-free when the song has no cover", async () => {
+    mockFavorites([
+      {
+        id: 8,
+        id_usuario: 1,
+        id_cancion: 3,
+        fecha_marcado: "2024-04-02T10:00:00Z",
+        usuario: null,
+        cancion: null,
+      },
+    ]);
+
+    const { container } = render(<Favorites />);
+    await screen.findByRole("heading", { name: "Billie Jean" });
+
+    expect(container.querySelector(".now-card img")).toBeNull();
   });
 });

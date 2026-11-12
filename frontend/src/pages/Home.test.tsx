@@ -16,6 +16,7 @@ const canciones = [
     genero: "Rock",
     fecha_creacion: "2024-01-15T10:30:00Z",
     archivo_audio: "/audio/01-bohemian-rhapsody.mp3",
+    portada: null,
   },
   {
     id: 3,
@@ -42,6 +43,7 @@ const canciones = [
     genero: "Jazz",
     fecha_creacion: "2024-01-20T10:30:00Z",
     archivo_audio: "/audio/08-take-five.mp3",
+    portada: null,
   },
   {
     id: 9,
@@ -55,6 +57,7 @@ const canciones = [
     genero: "Electronic",
     fecha_creacion: "2024-04-10T16:45:00Z",
     archivo_audio: "/audio/09-one-more-time.mp3",
+    portada: null,
   },
 ];
 
@@ -279,6 +282,50 @@ describe("Home", () => {
         within(player).getByRole("heading", { name: "Billie Jean" }),
       ).toBeInTheDocument();
     });
+  });
+
+  it("uses the generated covers on the editorial cards, with a placeholder fallback", async () => {
+    const conPortada = canciones.map((song, index) => ({
+      ...song,
+      portada: `/portadas/0${index + 1}-demo.svg`,
+    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => conPortada,
+      }),
+    );
+
+    const { container, unmount } = render(<Home />);
+    await screen.findByRole("button", { name: /Billie Jean/ });
+
+    expect(container.querySelector(".lead-art img")).toHaveAttribute(
+      "src",
+      "http://127.0.0.1:8000/portadas/01-demo.svg",
+    );
+    expect(container.querySelector(".secondary-cover img")).toHaveAttribute(
+      "src",
+      "http://127.0.0.1:8000/portadas/02-demo.svg",
+    );
+    unmount();
+
+    // Sin portada se mantiene el placeholder visual actual: nunca un <img> roto.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => canciones,
+      }),
+    );
+    const sinPortada = render(<Home />);
+    await screen.findByRole("button", { name: /Billie Jean/ });
+
+    expect(sinPortada.container.querySelector(".lead-art img")).toBeNull();
+    expect(sinPortada.container.querySelector(".lead-art svg")).toBeInTheDocument();
+    expect(
+      sinPortada.container.querySelector(".secondary-cover img"),
+    ).toBeNull();
   });
 
   it("plays the next track from the queue when pressing next", async () => {

@@ -16,6 +16,7 @@ const canciones = [
     genero: "Rock",
     fecha_creacion: "2024-01-15T10:30:00Z",
     archivo_audio: null,
+    portada: null,
   },
   {
     id: 3,
@@ -29,6 +30,7 @@ const canciones = [
     genero: "Pop",
     fecha_creacion: "2024-01-17T10:30:00Z",
     archivo_audio: null,
+    portada: null,
   },
   {
     id: 8,
@@ -42,6 +44,7 @@ const canciones = [
     genero: "Jazz",
     fecha_creacion: "2024-01-20T10:30:00Z",
     archivo_audio: null,
+    portada: null,
   },
 ];
 
@@ -49,6 +52,7 @@ function mockApi(options: {
   canciones?: unknown[];
   buscar?: unknown[];
   fail?: boolean;
+  favoritoDuplicado?: boolean;
 } = {}) {
   const songs = options.canciones ?? canciones;
   const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
@@ -58,6 +62,15 @@ function mockApi(options: {
     const url = String(input);
     const method = init?.method ?? "GET";
     if (method === "POST" && url.includes("/api/usuarios/1/favoritos/1")) {
+      if (options.favoritoDuplicado) {
+        return {
+          ok: false,
+          status: 409,
+          json: async () => ({
+            detail: "Esta canción ya está en favoritos de este usuario",
+          }),
+        } as Response;
+      }
       return { ok: true, json: async () => ({ id: 99, id_usuario: 1, id_cancion: 1 }) } as Response;
     }
     if (method === "DELETE" && url.includes("/api/usuarios/1/favoritos/1")) {
@@ -103,6 +116,30 @@ describe("Explore", () => {
     expect(await screen.findByText("Canción quitada de favoritos")).toBeInTheDocument();
 
     expect(fetchMock.mock.calls.some((call) => (call[1] as RequestInit | undefined)?.method === "DELETE")).toBe(true);
+  });
+
+  it("shows the API's honest message when the favorite already exists", async () => {
+    mockApi({ favoritoDuplicado: true });
+
+    render(
+      <>
+        <Explore />
+        <AppToaster />
+      </>,
+    );
+    await screen.findByRole("heading", { name: "Bohemian Rhapsody" });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: 'Guardar "Bohemian Rhapsody" en favoritos' }),
+    );
+
+    expect(
+      await screen.findByText("Esta canción ya está en favoritos de este usuario"),
+    ).toBeInTheDocument();
+    // La canción sigue sin marcarse: el estado visible no miente.
+    expect(
+      screen.getByRole("button", { name: 'Guardar "Bohemian Rhapsody" en favoritos' }),
+    ).toBeInTheDocument();
   });
 
   it("plays a song from the catalog with a single shared player", async () => {
@@ -177,6 +214,34 @@ describe("Explore", () => {
     expect(fetchMock.mock.calls[0]?.[0]).toContain("/api/canciones?page=1&page_size=12");
   });
 
+  it("shows the generated cover on each card, with the numbered placeholder as fallback", async () => {
+    const conPortada = canciones.map((song, index) => ({
+      ...song,
+      portada: `/portadas/0${index + 1}-demo.svg`,
+    }));
+    mockApi({ canciones: conPortada });
+
+    const { container, unmount } = render(<Explore />);
+    await screen.findByRole("heading", { name: "Bohemian Rhapsody" });
+
+    const covers = container.querySelectorAll(".song-cover img");
+    expect(covers).toHaveLength(3);
+    expect(covers[0]).toHaveAttribute(
+      "src",
+      "http://127.0.0.1:8000/portadas/01-demo.svg",
+    );
+    unmount();
+
+    // Sin portada: el placeholder numerado de siempre, nunca un <img> roto.
+    mockApi();
+
+    const sinPortada = render(<Explore />);
+    await screen.findByRole("heading", { name: "Bohemian Rhapsody" });
+
+    expect(sinPortada.container.querySelectorAll(".song-cover img")).toHaveLength(0);
+    expect(sinPortada.container.querySelector(".song-cover")?.textContent).toBe("01");
+  });
+
   it("reads the initial filters from the URL", async () => {
     window.history.pushState({}, "", "/canciones?q=queen&genero=Rock");
     const fetchMock = mockApi();
@@ -211,6 +276,8 @@ describe("Explore", () => {
       );
       expect(buscarCalls.length).toBe(1);
       expect(String(buscarCalls[0]?.[0])).toContain("titulo=lady");
+      expect(String(buscarCalls[0]?.[0])).toContain("artista=lady");
+      expect(String(buscarCalls[0]?.[0])).toContain("modo=cualquiera");
     });
     expect(window.location.search).toContain("q=lady");
     window.history.pushState({}, "", "/canciones");

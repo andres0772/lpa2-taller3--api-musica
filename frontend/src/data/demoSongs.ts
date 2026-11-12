@@ -13,6 +13,7 @@ export const DEMO_SONGS: Cancion[] = [
     genero: "Rock",
     fecha_creacion: "2024-01-20T12:00:00Z",
     archivo_audio: null,
+    portada: null,
   },
   {
     id: 2,
@@ -26,6 +27,7 @@ export const DEMO_SONGS: Cancion[] = [
     genero: "Rock",
     fecha_creacion: "2024-01-22T10:30:00Z",
     archivo_audio: null,
+    portada: null,
   },
   {
     id: 3,
@@ -39,6 +41,7 @@ export const DEMO_SONGS: Cancion[] = [
     genero: "Pop",
     fecha_creacion: "2024-02-01T15:00:00Z",
     archivo_audio: null,
+    portada: null,
   },
   {
     id: 4,
@@ -52,6 +55,7 @@ export const DEMO_SONGS: Cancion[] = [
     genero: "Rock",
     fecha_creacion: "2024-02-10T09:45:00Z",
     archivo_audio: null,
+    portada: null,
   },
   {
     id: 5,
@@ -65,6 +69,7 @@ export const DEMO_SONGS: Cancion[] = [
     genero: "Rock",
     fecha_creacion: "2024-02-18T14:20:00Z",
     archivo_audio: null,
+    portada: null,
   },
   {
     id: 6,
@@ -78,6 +83,7 @@ export const DEMO_SONGS: Cancion[] = [
     genero: "Rock",
     fecha_creacion: "2024-03-01T11:10:00Z",
     archivo_audio: null,
+    portada: null,
   },
   {
     id: 7,
@@ -91,6 +97,7 @@ export const DEMO_SONGS: Cancion[] = [
     genero: "Pop",
     fecha_creacion: "2024-03-15T13:30:00Z",
     archivo_audio: null,
+    portada: null,
   },
   {
     id: 8,
@@ -104,6 +111,7 @@ export const DEMO_SONGS: Cancion[] = [
     genero: "Jazz",
     fecha_creacion: "2024-04-01T10:00:00Z",
     archivo_audio: null,
+    portada: null,
   },
   {
     id: 9,
@@ -117,6 +125,7 @@ export const DEMO_SONGS: Cancion[] = [
     genero: "Electronic",
     fecha_creacion: "2024-04-10T16:45:00Z",
     archivo_audio: null,
+    portada: null,
   },
   {
     id: 10,
@@ -130,5 +139,6 @@ export const DEMO_SONGS: Cancion[] = [
     genero: "Rock",
     fecha_creacion: "2024-05-01T12:00:00Z",
     archivo_audio: null,
+    portada: null,
   },
 ];

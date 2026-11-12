@@ -10,6 +10,7 @@ export interface Cancion {
   genero: string;
   fecha_creacion: string;
   archivo_audio: string | null;
+  portada: string | null;
 }
 
 export interface Usuario {
@@ -44,6 +45,11 @@ export function audioUrl(ruta: string | null): string | null {
   return `${API_BASE_URL}${ruta}`;
 }
 
+// Mismo espejo para las portadas deterministas ('/portadas/x.svg').
+export function portadaUrl(ruta: string | null): string | null {
+  return audioUrl(ruta);
+}
+
 export interface UsuarioSesion {
   id: number;
   nombre: string;
@@ -53,6 +59,20 @@ export interface UsuarioSesion {
 const TOKEN_KEY = "yourmusic.token";
 const USUARIO_KEY = "yourmusic.usuario";
 
+// Error de API que conserva el mensaje honesto del backend (detail) y su
+// estado HTTP, para que la UI muestre la razón real en vez de un genérico.
+export class ApiError extends Error {
+  estado: number;
+  detalle: string | null;
+
+  constructor(estado: number, detalle: string | null) {
+    super(detalle ?? `La API respondió con estado ${estado}`);
+    this.name = "ApiError";
+    this.estado = estado;
+    this.detalle = detalle;
+  }
+}
+
 async function request<T>(
   path: string,
   options?: RequestInit,
@@ -60,7 +80,16 @@ async function request<T>(
   const response = await fetch(`${API_BASE_URL}${path}`, options);
 
   if (!response.ok) {
-    throw new Error(`La API respondió con estado ${response.status}`);
+    let detalle: string | null = null;
+    try {
+      const body = (await response.json()) as { detail?: unknown };
+      if (typeof body.detail === "string") {
+        detalle = body.detail;
+      }
+    } catch {
+      // Sin cuerpo JSON (o vacío): queda el mensaje por estado.
+    }
+    throw new ApiError(response.status, detalle);
   }
 
   // Respuestas sin body (204 al quitar favoritos) no tienen JSON que parsear.
@@ -147,6 +176,8 @@ export function listCanciones(page = 1, pageSize = 100): Promise<Cancion[]> {
 
 export interface BuscarCancionesFiltros {
   titulo?: string;
+  artista?: string;
+  modo?: "todas" | "cualquiera";
   genero?: string;
   page?: number;
   pageSize?: number;
@@ -156,6 +187,12 @@ export function buscarCanciones(filtros: BuscarCancionesFiltros = {}): Promise<C
   const params = new URLSearchParams();
   if (filtros.titulo) {
     params.set("titulo", filtros.titulo);
+  }
+  if (filtros.artista) {
+    params.set("artista", filtros.artista);
+  }
+  if (filtros.modo) {
+    params.set("modo", filtros.modo);
   }
   if (filtros.genero) {
     params.set("genero", filtros.genero);

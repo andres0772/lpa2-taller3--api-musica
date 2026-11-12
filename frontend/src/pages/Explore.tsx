@@ -11,6 +11,8 @@ import {
   crearFavorito,
   listCanciones,
   quitarFavorito,
+  portadaUrl,
+  ApiError,
   type Cancion,
 } from "@/api/music";
 
@@ -59,9 +61,13 @@ export default function Explore() {
 
     try {
       const busqueda = titulo.trim().length > 0 || genero.length > 0;
+      const texto = titulo.trim();
       const songs = busqueda
         ? await buscarCanciones({
-            titulo: titulo.trim() || undefined,
+            // Un solo campo para el usuario: el texto busca en título O artista.
+            titulo: texto || undefined,
+            artista: texto || undefined,
+            modo: texto ? "cualquiera" : undefined,
             genero: genero || undefined,
             page,
             pageSize: PAGE_SIZE,
@@ -141,8 +147,13 @@ export default function Explore() {
         setFavoritas((previas) => [...previas, song.id]);
         toast.success("Canción guardada en favoritos");
       }
-    } catch {
-      toast.error("No pudimos actualizar favoritos");
+    } catch (error) {
+      // La razón real del backend (409 = ya estaba guardada) tal cual viene.
+      const mensaje =
+        error instanceof ApiError && error.detalle
+          ? error.detalle
+          : "No pudimos actualizar favoritos";
+      toast.error(mensaje);
     } finally {
       setPendingFavorite(null);
     }
@@ -250,6 +261,7 @@ export default function Explore() {
           <ol className="explore-grid">
             {canciones.map((song, index) => {
               const guardada = favoritas.includes(song.id);
+              const portada = portadaUrl(song.portada);
 
               return (
                 <li
@@ -260,7 +272,11 @@ export default function Explore() {
                   }
                 >
                   <span className="song-cover" aria-hidden="true">
-                    {String(index + 1 + (page - 1) * PAGE_SIZE).padStart(2, "0")}
+                    {portada ? (
+                      <img src={portada} alt="" loading="lazy" />
+                    ) : (
+                      String(index + 1 + (page - 1) * PAGE_SIZE).padStart(2, "0")
+                    )}
                   </span>
                   <div className="song-copy">
                     <h3>{song.titulo}</h3>
