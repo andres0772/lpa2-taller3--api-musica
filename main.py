@@ -152,5 +152,9 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        # TODO: Configurar el servidor uvicorn con los parámetros apropiados
+        "main:app",  # string de import: requerido para que reload funcione
+        host=settings.host,
+        port=settings.port,
+        reload=True,  # solo desarrollo: reinicia al guardar cambios
+        log_level="info",
     )
