@@ -48,6 +48,7 @@ def create_db_and_tables() -> None:
 # create_all crea tablas nuevas pero NO altera tablas existentes.
 COLUMNAS_NUEVAS: dict[str, list[tuple[str, str]]] = {
     "usuario": [("password_hash", "TEXT")],
+    "cancion": [("portada", "TEXT")],
 }
 
 

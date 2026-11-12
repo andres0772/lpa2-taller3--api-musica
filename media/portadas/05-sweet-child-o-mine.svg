@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"
+  viewBox="0 0 300 300"
+  role="img" aria-label="Portada de Sweet Child o' Mine — Guns N' Roses">
+  <title>Sweet Child o' Mine · Guns N' Roses</title>
+  <style>
+    :root {
+      --color-bg-deep: #020617;
+      --color-bg-card: rgba(15, 23, 42, 0.72);
+      --color-bg-card-hover: rgba(30, 41, 59, 0.8);
+      --color-accent-indigo: #4f46e5;
+      --color-accent-glow: #6366f1;
+      --color-accent-muted: rgba(79, 70, 229, 0.15);
+      --color-text-main: #f1f5f9;
+      --color-text-muted: #94a3b8;
+      --color-border-glass: rgba(148, 163, 184, 0.12);
+      --color-border-glass-hover: rgba(148, 163, 184, 0.22);
+    }
+    text { font-family: "Geist Variable", "Inter Variable", system-ui, sans-serif; }
+    .iniciales { font-size: 88px; font-weight: 800; letter-spacing: -0.04em;
+                 fill: var(--color-text-main); }
+    .artista { font-size: 12px; font-weight: 700; letter-spacing: 0.16em;
+               fill: var(--color-text-muted); }
+
+  </style>
+  <defs>
+    <linearGradient id="fondo-05-sweet-child-o-mine" x1="0" y1="0" x2="0" y2="1"
+      gradientTransform="rotate(135 .5 .5)">
+      <stop offset="0" stop-color="var(--color-bg-deep)"/>
+      <stop offset="1" stop-color="var(--color-bg-card-hover)"/>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="300" fill="url(#fondo-05-sweet-child-o-mine)"/>
+  <circle cx="248" cy="89" r="30" fill="var(--color-accent-indigo)" fill-opacity="0.92"/>
+  <circle cx="248" cy="89" r="48" fill="none" stroke="var(--color-accent-glow)" stroke-opacity="0.70" stroke-width="2"/>
+  <circle cx="248" cy="89" r="70" fill="none" stroke="var(--color-accent-indigo)" stroke-opacity="0.55" stroke-width="2"/>
+  <circle cx="248" cy="89" r="96" fill="none" stroke="var(--color-accent-glow)" stroke-opacity="0.40" stroke-width="2"/>
+  <circle cx="248" cy="89" r="124" fill="none" stroke="var(--color-accent-indigo)" stroke-opacity="0.25" stroke-width="2"/>
+  <rect x="8" y="8" width="284" height="284" fill="none"
+    stroke="var(--color-border-glass-hover)" stroke-opacity="0.5"/>
+  <text class="iniciales" x="24" y="246">SC</text>
+  <text class="artista" x="26" y="274">Guns N' Roses</text>
+</svg>

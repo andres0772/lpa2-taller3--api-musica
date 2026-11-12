@@ -464,6 +464,31 @@ class TestCanciones:
         response = client.get("/api/canciones/999")
         assert response.status_code == 404
 
+    def test_lectura_expone_portada(self, client: TestClient, session: Session):
+        """El schema de lectura incluye el campo aditivo portada (S3)."""
+        cancion = Cancion(
+            titulo="Canción con portada",
+            artista="Artista",
+            duracion="3:45",
+            duracion_segundos=225,
+            año=2020,
+            genero=Genero.ROCK,
+            portada="/portadas/01-demo.svg",
+        )
+        session.add(cancion)
+        session.commit()
+        session.refresh(cancion)
+
+        response = client.get(f"/api/canciones/{cancion.id}")
+        assert response.status_code == 200
+        assert response.json()["portada"] == "/portadas/01-demo.svg"
+
+    def test_lectura_portada_null_cuando_no_hay(self, client: TestClient, cancion_test: Cancion):
+        """Sin portada asociada, el campo se sirve como null (nunca se omite)."""
+        response = client.get(f"/api/canciones/{cancion_test.id}")
+        assert response.status_code == 200
+        assert response.json()["portada"] is None
+
     def test_actualizar_cancion(self, client: TestClient, cancion_test: Cancion):
         """Test para PUT /api/canciones/{id}."""
         response = client.put(
@@ -576,6 +601,21 @@ class TestBuscarCanciones:
         data = response.json()
         assert len(data) == 1
         assert data[0]["artista"] == "Queen"
+
+    def test_buscar_modo_cualquiera_acepta_titulo_o_artista(self, client: TestClient):
+        """modo=cualquiera: coincide si el texto está en el título O en el artista."""
+        response = client.get("/api/canciones/buscar?modo=cualquiera&titulo=queen&artista=queen")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["artista"] == "Queen"
+
+    def test_buscar_por_defecto_exige_titulo_y_artista(self, client: TestClient):
+        """Sin modo (default 'todas'): título Y artista deben coincidir."""
+        response = client.get("/api/canciones/buscar?titulo=queen&artista=queen")
+        assert response.status_code == 200
+        data = response.json()
+        assert data == []
 
     def test_buscar_por_genero(self, client: TestClient):
         """Test buscar por género exacto."""

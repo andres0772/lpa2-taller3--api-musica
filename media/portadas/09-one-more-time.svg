@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"
+  viewBox="0 0 300 300"
+  role="img" aria-label="Portada de One More Time — Daft Punk">
+  <title>One More Time · Daft Punk</title>
+  <style>
+    :root {
+      --color-bg-deep: #020617;
+      --color-bg-card: rgba(15, 23, 42, 0.72);
+      --color-bg-card-hover: rgba(30, 41, 59, 0.8);
+      --color-accent-indigo: #4f46e5;
+      --color-accent-glow: #6366f1;
+      --color-accent-muted: rgba(79, 70, 229, 0.15);
+      --color-text-main: #f1f5f9;
+      --color-text-muted: #94a3b8;
+      --color-border-glass: rgba(148, 163, 184, 0.12);
+      --color-border-glass-hover: rgba(148, 163, 184, 0.22);
+    }
+    text { font-family: "Geist Variable", "Inter Variable", system-ui, sans-serif; }
+    .iniciales { font-size: 88px; font-weight: 800; letter-spacing: -0.04em;
+                 fill: var(--color-text-main); }
+    .artista { font-size: 12px; font-weight: 700; letter-spacing: 0.16em;
+               fill: var(--color-text-muted); }
+
+  </style>
+  <defs>
+    <linearGradient id="fondo-09-one-more-time" x1="0" y1="0" x2="1" y2="1"
+      gradientTransform="rotate(90 .5 .5)">
+      <stop offset="0" stop-color="var(--color-bg-deep)"/>
+      <stop offset="1" stop-color="var(--color-bg-card)"/>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="300" fill="url(#fondo-09-one-more-time)"/>
+  <circle cx="147" cy="112" r="16" fill="var(--color-accent-indigo)" fill-opacity="0.9"/>
+  <polyline points="0,226.9 10,215.8 20,199.5 30,182.3 40,168.6 50,162.2 60,164.7 70,175.5 80,191.6 90,208.9 100,222.8 110,229.7 120,227.6 130,217.2 140,201.2 150,183.9 160,169.7 170,162.5 180,164.1 190,174.1 200,189.9 210,207.3 220,221.7 230,229.4 240,228.2 250,218.6 260,203.0 270,185.6 280,170.9 290,162.8 300,163.5" fill="none" stroke="var(--color-accent-glow)" stroke-opacity="0.85" stroke-width="3" stroke-linecap="round"/>
+  <polyline points="0,175.6 10,170.0 20,174.2 30,186.2 40,201.2 50,212.6 60,215.8 70,209.4 80,196.1 90,181.4 100,171.7 110,170.9 120,179.5 130,193.7 140,207.7 150,215.5 160,213.8 170,203.3 180,188.5 190,175.6 200,170.0 210,174.2 220,186.2 230,201.2 240,212.6 250,215.8 260,209.4 270,196.1 280,181.4 290,171.7 300,170.9" fill="none" stroke="var(--color-accent-indigo)" stroke-opacity="0.63" stroke-width="2" stroke-linecap="round"/>
+  <polyline points="0,214.0 10,227.4 20,236.1 30,235.2 40,225.3 50,211.9 60,202.4 70,202.2 80,211.4 90,224.8 100,235.0 110,236.2 120,227.8 130,214.5 140,203.7 150,201.4 160,209.0 170,222.2 180,233.6 190,236.8 200,230.1 210,217.2 220,205.3 230,201.0 240,206.8 250,219.4 260,231.8 270,237.0 280,232.2 290,220.0 300,207.2" fill="none" stroke="var(--color-accent-glow)" stroke-opacity="0.41" stroke-width="2" stroke-linecap="round"/>
+  <rect x="8" y="8" width="284" height="284" fill="none"
+    stroke="var(--color-border-glass-hover)" stroke-opacity="0.5"/>
+  <text class="iniciales" x="24" y="246">OM</text>
+  <text class="artista" x="26" y="274">Daft Punk</text>
+</svg>

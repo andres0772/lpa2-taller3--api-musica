@@ -97,6 +97,11 @@ app.include_router(auth_router)
 AUDIO_DIR = Path(__file__).resolve().parent / "media" / "audio"
 app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
 
+# Servir las portadas deterministas referenceadas por el seed (scripts/seed_data.sql)
+# Los archivos se generan con scripts/generate_portadas.py (mismo patrón que el audio)
+PORTADAS_DIR = Path(__file__).resolve().parent / "media" / "portadas"
+app.mount("/portadas", StaticFiles(directory=PORTADAS_DIR), name="portadas")
+
 
 # Crear un endpoint raíz que retorne información básica de la API
 @app.get("/", tags=["Root"])

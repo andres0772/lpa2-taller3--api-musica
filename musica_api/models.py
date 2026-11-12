@@ -212,6 +212,13 @@ class Cancion(CancionBase, table=True):
         max_length=500,
         description="Ruta/URL del archivo de audio (futuro)",
     )
+    # Portada determinista generada por scripts/generate_portadas.py (S3)
+    portada: str | None = Field(
+        default=None,
+        nullable=True,
+        max_length=500,
+        description="Ruta/URL de la portada generada del catálogo",
+    )
     # Duración string excluida de la tabla (solo para input schema)
     # nullable=True para que SQLModel no la requiera en INSERT
     duracion: str | None = Field(default=None, nullable=True, exclude=True)
@@ -285,6 +292,7 @@ class CancionRead(CancionBase):
     duracion_segundos: int
     duracion_formato: str
     archivo_audio: str | None = None
+    portada: str | None = None
 
     class Config:
         from_attributes = True

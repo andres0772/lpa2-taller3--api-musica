@@ -93,3 +93,14 @@ sqlite3 musica.db "SELECT 'Usuarios:', COUNT(*) FROM usuario UNION ALL SELECT 'C
 | 8 | Take Five | Dave Brubeck | Jazz | 5:24 |
 | 9 | One More Time | Daft Punk | Electronic | 5:20 |
 | 10 | La Bamba | Ritchie Valens | Rock | 2:05 |
+
+## Portadas (S3)
+
+Las 10 canciones reciben una portada determinista en `media/portadas/<slug>.svg` (mismo slug que el audio). Se generan con:
+
+```bash
+uv run python scripts/generate_portadas.py
+```
+
+- Determinista: hash SHA-256 del título → paleta con los tokens de diseño del proyecto (`--color-accent-indigo`, `--color-accent-glow`, fondos oscuros) + variantes de patrón (círculos, ondas, grilla). Sin material con copyright.
+- La columna `portada` se completa con UPDATEs idempotentes (mismo enfoque que la sección de audio) y la API las sirve en `/portadas/<slug>.svg`.

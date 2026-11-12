@@ -11,7 +11,7 @@ Endpoints:
 """
 
 import logging
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select
@@ -127,6 +127,15 @@ def buscar_canciones(
         str | None,
         Query(description="Filtrar por artista (contiene, case-insensitive)"),
     ] = None,
+    modo: Annotated[
+        Literal["todas", "cualquiera"],
+        Query(
+            description=(
+                "Cómo combinar título y artista: 'todas' (default) exige que "
+                "coincidan los dos; 'cualquiera' acepta que coincida uno"
+            )
+        ),
+    ] = "todas",
     genero: Annotated[
         Genero | None,
         Query(description="Filtrar por género exacto"),
@@ -145,6 +154,7 @@ def buscar_canciones(
 
     - **titulo**: contiene texto (ILIKE)
     - **artista**: contiene texto (ILIKE)
+    - **modo**: 'todas' (default) exige título Y artista; 'cualquiera' acepta título O artista
     - **genero**: coincidencia exacta
     - **año_desde** / **año_hasta**: rango inclusivo
     - **page**, **page_size**: paginación
@@ -156,10 +166,20 @@ def buscar_canciones(
     query = select(Cancion)
 
     # Filtros dinámicos
-    if titulo:
-        query = query.where(Cancion.titulo.ilike(f"%{titulo}%"))
-    if artista:
-        query = query.where(Cancion.artista.ilike(f"%{artista}%"))
+    if modo == "cualquiera" and (titulo or artista):
+        # Basta que el texto coincida en uno de los dos campos.
+        por_texto = None
+        if titulo:
+            por_texto = Cancion.titulo.ilike(f"%{titulo}%")
+        if artista:
+            por_artista = Cancion.artista.ilike(f"%{artista}%")
+            por_texto = por_artista if por_texto is None else por_texto | por_artista
+        query = query.where(por_texto)
+    else:
+        if titulo:
+            query = query.where(Cancion.titulo.ilike(f"%{titulo}%"))
+        if artista:
+            query = query.where(Cancion.artista.ilike(f"%{artista}%"))
     if genero:
         query = query.where(Cancion.genero == genero)
     if año_desde is not None:
