@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>YourMusic — Login: escenario partido</title>
+<style>
+  :root {
+    --font-sans: "Geist Variable", "Inter Variable", system-ui, sans-serif;
+    --color-bg-deep: #020617;
+    --color-bg-card: rgba(15, 23, 42, 0.72);
+    --color-border-glass: rgba(148, 163, 184, 0.12);
+    --color-border-glass-hover: rgba(148, 163, 184, 0.22);
+    --color-accent-indigo: #4f46e5;
+    --color-accent-glow: #6366f1;
+    --color-text-main: #f1f5f9;
+    --color-text-muted: #94a3b8;
+  }
+  * { box-sizing: border-box; border-color: var(--color-border-glass); }
+  body {
+    margin: 0; min-width: 320px; min-height: 100vh;
+    background: var(--color-bg-deep); color: var(--color-text-main);
+    font-family: var(--font-sans);
+  }
+  .page { display: grid; grid-template-columns: 1.1fr 0.9fr; min-height: 100vh; }
+  .stage { position: relative; overflow: hidden; padding: 56px; display: flex; flex-direction: column; justify-content: center; }
+  .beam { position: absolute; width: 40vw; height: 40vw; border-radius: 50%; filter: blur(60px); opacity: .35; }
+  .beam-a { background: var(--color-accent-indigo); top: -10%; left: -10%; }
+  .beam-b { background: var(--color-accent-glow); bottom: -15%; right: -5%; opacity: .22; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 10px; color: var(--color-text-muted); font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+  .eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--color-accent-glow); }
+  h1 { font-size: 44px; line-height: 1.06; margin: 18px 0 14px; max-width: 12ch; letter-spacing: -0.02em; }
+  .lede { color: var(--color-text-muted); font-size: 14px; line-height: 1.6; max-width: 46ch; margin: 0 0 34px; }
+  .disc { width: 190px; height: 190px; border-radius: 50%; position: relative;
+    background: repeating-radial-gradient(circle at 50% 50%, #0b1220 0 6px, #0e1628 6px 12px);
+    border: 1px solid var(--color-border-glass-hover);
+    box-shadow: 0 30px 80px rgba(2,6,23,.8), inset 0 0 40px rgba(99,102,241,.12);
+    will-change: transform; animation: giro-disco 26s linear infinite; }
+  @keyframes giro-disco { to { transform: rotate(360deg); } }
+  /* Gotas: un nodo por gota, solo transform/opacity (compuestas), sin blur ni canvas.
+     Se crean throttled por rAF y se autodestruyen al terminar la animación. */
+  .gota { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+    border: 1.5px solid var(--color-accent-glow); background: rgba(99,102,241,.18);
+    pointer-events: none; animation: gota 620ms ease-out forwards; }
+  @keyframes gota { from { transform: scale(.2); opacity: .9; } to { transform: scale(2.6); opacity: 0; } }
+  .disc::after { content: "YourMusic"; position: absolute; inset: 38% ; display: grid; place-items: center;
+    width: 24%; height: 24%; border-radius: 50%; background: var(--color-accent-indigo); color: var(--color-text-main);
+    font-size: 8px; font-weight: 700; text-align: center; }
+  .demo-note { display: flex; align-items: center; gap: 14px; color: var(--color-text-muted); font-size: 12px; }
+  .demo-note b { color: var(--color-text-main); font-size: 13px; }
+  .conteo-demo { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .conteo-demo button { min-height: 32px; padding: 0 12px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--color-border-glass-hover); background: var(--color-bg-card); color: var(--color-text-main); font: inherit; font-size: 11px; }
+  .conteo-demo button:hover { border-color: var(--color-accent-glow); }
+  .conteo-demo button:disabled { opacity: .45; cursor: not-allowed; }
+  .conteo-demo span { font-size: 11px; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+  .hint-demo { margin: 10px 0 0; font-size: 11px; color: var(--color-text-muted); line-height: 1.5; max-width: 46ch; }
+  .aside { display: grid; place-items: center; padding: 48px 40px; }
+  .panel { width: min(430px, 100%); background: var(--color-bg-card); backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--color-border-glass-hover); border-radius: 20px; box-shadow: 0 18px 60px var(--color-bg-deep); padding: 28px; }
+  .panel h2 { font-size: 20px; margin: 0 0 4px; }
+  .panel .sub { color: var(--color-text-muted); font-size: 12px; margin: 0 0 22px; }
+  .field { display: grid; gap: 8px; margin-bottom: 14px; }
+  .field label { font-size: 9px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--color-text-muted); }
+  .field input { min-height: 48px; padding: 0 14px; border: 1px solid var(--color-border-glass-hover); border-radius: 10px;
+    color: var(--color-text-main); background: var(--color-bg-deep); font: inherit; font-size: 13px; }
+  .field input::placeholder { color: var(--color-text-muted); }
+  .primary { width: 100%; min-height: 48px; border: 0; border-radius: 10px; cursor: pointer; margin-top: 8px;
+    background: var(--color-accent-indigo); color: var(--color-text-main); font: inherit; font-size: 13px; font-weight: 700; }
+  .primary[aria-busy="true"] { opacity: .7; }
+  .error { border: 1px solid var(--color-accent-glow); border-radius: 12px; padding: 12px 14px; margin: 16px 0 0;
+    color: var(--color-text-main); font-size: 12px; line-height: 1.5; background: rgba(99,102,241,.08); }
+  .switch { margin: 18px 0 0; color: var(--color-text-muted); font-size: 12px; }
+  .switch button { border: 0; padding: 0; background: none; color: var(--color-accent-glow); font: inherit; font-weight: 700; cursor: pointer; }
+  .envio { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border-glass); }
+  .envio .primary { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: auto; min-width: 140px; }
+  .envio .primary[disabled] { cursor: progress; }
+  .spinner { width: 13px; height: 13px; border-radius: 50%; border: 2px solid rgba(241,245,249,.35); border-top-color: var(--color-text-main); animation: gira .7s linear infinite; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  .envio-nota { margin: 8px 0 0; font-size: 11px; color: var(--color-text-muted); }
+  :focus-visible { outline: 2px solid var(--color-accent-glow); outline-offset: 2px; }
+  @media (max-width: 900px) {
+    .page { grid-template-columns: 1fr; }
+    .stage { padding: 40px 24px 8px; }
+    h1 { font-size: 34px; }
+    .disc { display: none; }
+    .aside { padding: 24px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .disc { animation: none; }
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <section class="stage" aria-label="Presentación de YourMusic">
+    <span class="beam beam-a" aria-hidden="true"></span>
+    <span class="beam beam-b" aria-hidden="true"></span>
+    <span class="eyebrow">Tu cuenta</span>
+    <h1>Tu banda sonora, contigo.</h1>
+    <p class="lede">Entrá para que tus favoritos queden atados a tu usuario y te esperen en cualquier dispositivo. Sin cuenta, escuchás el catálogo de demostración.</p>
+    <div class="disc" aria-hidden="true"></div>
+    <p class="demo-note"><b><span id="conteo">10</span> <span id="conteo-palabra">canciones</span> demo</b><span>Rock, pop, jazz y electrónica · audio de demostración</span></p>
+    <div class="conteo-demo" aria-label="Demostración del contador">
+      <button type="button" id="restar">− canción</button>
+      <span id="conteo-estado">10 en el catálogo</span>
+      <button type="button" id="sumar">+ canción</button>
+    </div>
+    <p class="hint-demo">En la app real este número sale del catálogo cargado (cantidad de canciones de la API): si se agrega o se quita una, se actualiza solo. Los botones de arriba simulan ese cambio.</p>
+  </section>
+
+  <aside class="aside">
+    <form class="panel" novalidate aria-describedby="login-desc">
+      <h2>Entrar a YourMusic</h2>
+      <p class="sub" id="login-desc">Con tu correo y contraseña.</p>
+      <div class="field">
+        <label for="correo">Correo</label>
+        <input id="correo" name="correo" type="email" autocomplete="email" placeholder="tu@correo.com" required />
+      </div>
+      <div class="field">
+        <label for="pass">Contraseña</label>
+        <input id="pass" name="contraseña" type="password" autocomplete="current-password" placeholder="••••••••" required />
+      </div>
+      <button class="primary" type="submit">Entrar</button>
+      <p class="error" role="alert">Ese correo y contraseña no coinciden. Revisá los datos o crear una cuenta nueva.</p>
+      <p class="switch">¿Todavía no tenés cuenta? <button type="button">Crear cuenta</button></p>
+      <div class="envio" aria-label=" Estado de envío, de demostración ">
+        <button class="primary" type="button" aria-busy="true" disabled>
+          <span class="spinner" aria-hidden="true"></span> Entrando…
+        </button>
+        <p class="envio-nota">Breve, mientras entrás: tus datos quedan como estaban.</p>
+      </div>
+    </form>
+  </aside>
+</div>
+<script>
+  // Gotas al pasar el mouse sobre la escena: rAF-throttled, tope de 12 nodos,
+  // autolimpieza al terminar. Nada de canvas ni de blur animado.
+  (function () {
+    var escena = document.querySelector(".stage");
+    if (!escena || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var vivas = 0;
+    var lista = [];
+    var ultima = 0;
+    escena.addEventListener("pointermove", function (evento) {
+      var ahora = performance.now();
+      if (ahora - ultima < 90 || vivas >= 12) return;
+      ultima = ahora;
+      requestAnimationFrame(function () {
+        var gota = document.createElement("span");
+        gota.className = "gota";
+        var caja = escena.getBoundingClientRect();
+        gota.style.left = evento.clientX - caja.left + "px";
+        gota.style.top = evento.clientY - caja.top + "px";
+        gota.addEventListener("animationend", function () {
+          gota.remove();
+          vivas -= 1;
+          lista = lista.filter(function (g) { return g !== gota; });
+        });
+        escena.appendChild(gota);
+        vivas += 1;
+        lista.push(gota);
+      });
+    });
+  })();
+
+  // Contador vivo del catálogo demo: sumar/restar simula el catálogo real,
+  // donde el número sale de la cantidad de canciones cargadas.
+  (function () {
+    var total = 10;
+    var el = document.getElementById("conteo");
+    var palabra = document.getElementById("conteo-palabra");
+    var estado = document.getElementById("conteo-estado");
+    function pintar() {
+      el.textContent = String(total);
+      palabra.textContent = total === 1 ? "canción" : "canciones";
+      estado.textContent = total === 0 ? "catálogo vacío" : total + " en el catálogo";
+      document.getElementById("restar").disabled = total === 0;
+    }
+    document.getElementById("sumar").addEventListener("click", function () { total += 1; pintar(); });
+    document.getElementById("restar").addEventListener("click", function () { total = Math.max(0, total - 1); pintar(); });
+    pintar();
+  })();
+</script>
+</body>
+</html>

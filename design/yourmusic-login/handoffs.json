@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "chosen": "01-escenario-partido.html",
+  "handoffs": {
+    "01-escenario-partido.html": {
+      "status": "implemented",
+      "queued": true,
+      "sentAt": "2026-11-12T23:42:39.883Z",
+      "startedAt": "2026-11-12T23:50:53.950Z",
+      "implementedAt": "2026-11-13T00:25:07.888Z",
+      "feature": "odd/tasks/yourmusic-login-design.md",
+      "note": "Implementación verificada: gate 101/101 + tsc/lint/build + 92/92 backend + 7/7 E2E; check visual en Chromium real (desktop 1440 y móvil 390): layout partido, gotas vivas al pasar el mouse, contador vivo desde la API, estado “Entrando…” con spinner y datos preservados, error específico con salida.",
+      "previewUrl": "http://localhost:5173/login"
+    }
+  }
+}

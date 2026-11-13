@@ -1,77 +1,51 @@
-# YourMusic design system
+# YourMusic — Sistema de diseño (sync 2026-11-13)
 
-Synchronized from the current project source. Values below are recorded only when they exist in the discovered source.
+Sincronizado desde las fuentes del proyecto. Solo se registran valores encontrados en las fuentes; cada entrada nombra su `path`.
 
-## Source
+## Color
 
-- `frontend/src/index.css` — Tailwind CSS v4 `@theme` tokens, global styles, glass treatment, shadows, transitions, and reduced-motion rule.
+Tokens definidos en `frontend/src/index.css` (bloque `@theme`):
 
-## Colors
-
-| Token | Value | Usage found in source |
+| Token | Valor | Uso |
 |---|---|---|
-| `--color-bg-deep` | `#020617` | Global page background (`body`). |
-| `--color-bg-card` | `rgba(15, 23, 42, 0.72)` | `.glass` surface. |
-| `--color-bg-card-hover` | `rgba(30, 41, 59, 0.8)` | `.glass-strong` surface. |
-| `--color-border-glass` | `rgba(148, 163, 184, 0.12)` | Default glass border and global border color. |
-| `--color-border-glass-hover` | `rgba(148, 163, 184, 0.22)` | `.glass:hover` border. |
-| `--color-accent-indigo` | `#4f46e5` | Primary indigo accent. |
-| `--color-accent-glow` | `#6366f1` | Lighter indigo accent. |
-| `--color-accent-muted` | `rgba(79, 70, 229, 0.15)` | Muted indigo accent surface. |
-| `--color-text-main` | `#f1f5f9` | Primary page text. |
-| `--color-text-muted` | `#94a3b8` | Secondary page text. |
+| `--color-bg-deep` | `#020617` | Fondo base de toda la app (`body` en `frontend/src/index.css`) |
+| `--color-bg-card` | `rgba(15, 23, 42, 0.72)` | Paneles glass (`.glass`, `frontend/src/index.css`) |
+| `--color-bg-card-hover` | `rgba(30, 41, 59, 0.8)` | Variante fuerte de panel (`.glass-strong`) |
+| `--color-border-glass` | `rgba(148, 163, 184, 0.12)` | Borde por defecto de paneles y tarjetas |
+| `--color-border-glass-hover` | `rgba(148, 163, 184, 0.22)` | Borde en hover y en superficies activas (player, toolbar) |
+| `--color-accent-indigo` | `#4f46e5` | Acento principal: botón de play, acción primaria |
+| `--color-accent-glow` | `#6366f1` | Acento de brillo: foco visible, links de acción, ondas del waveform |
+| `--color-accent-muted` | `rgba(79, 70, 229, 0.15)` | Fondo de iconos/botones secundarios (`.skip-button` en `frontend/src/styles/cinematic.css`) |
+| `--color-text-main` | `#f1f5f9` | Texto principal |
+| `--color-text-muted` | `#94a3b8` | Texto secundario, etiquetas, placeholders |
 
-## Typography
+Composiciones derivadas observadas en las fuentes: `color-mix(in srgb, var(--color-bg-deep) 88%, var(--color-accent-indigo) 12%)` para el `.glass-player`, y `90%/10%` para `.explore-toolbar` (`frontend/src/styles/cinematic.css`).
 
-| Token | Value | Usage found in source |
-|---|---|---|
-| `--font-sans` | `"Geist Variable", "Inter Variable", system-ui, sans-serif` | Global `body` font family. |
+## Tipografía
 
-Type sizes, weights, line heights, and letter spacing are **not tokenized in the discovered source**. Artboards may establish a visual type scale, but those values are proposal-level art direction rather than existing project tokens.
+- Familia: `--font-sans` = `"Geist Variable", "Inter Variable", system-ui, sans-serif` (`frontend/src/index.css`).
+- Escala observada (fuente: `frontend/src/styles/cinematic.css` salvo nota):
+  - Eyebrow: 11px / 700 / mayúsculas / letter-spacing 0.18em, con filete de 26px adelante (`cinematic.css:161`).
+  - Etiquetas de campo (`.explore-field label`): 9px / 700 / mayúsculas / 0.13em.
+  - Botones (`.action-button`): 13px / 700.
+  - Texto base / campos: 13px (`cinematic.css:1183`).
+  - Notas y switch de login: 12px (`cinematic.css:1483`).
+  - Tiempos del player / duración: 10px tabular-nums (`cinematic.css:455`, `cinematic.css:477`).
 
-## Spacing
+## Espaciado, radio y sombra
 
-No spacing scale is declared in `frontend/src/index.css`. Spacing in the current UI comes from Tailwind utility classes. A reusable spacing token scale must therefore be proposed before it can be treated as a project token.
+- Padding de panel toolbar: 20px; campo: padding 0 14px, min-height 46px; bot primario: min-height 48px (`cinematic.css:1149-1205`).
+- Radios: 20px en `.glass-player` (`cinematic.css:399`); 3px en barras de waveform (`cinematic.css:469`); 50% en botones circulares (`cinematic.css:351`).
+- Sombras: `.glass` → `0 4px 24px rgba(2, 6, 23, 0.4)` (`frontend/src/index.css`); `.glass-player` → `0 18px 60px var(--color-bg-deep)` (`cinematic.css:401`); barra de seek: 4px de alto, thumb 12px (`cinematic.css`, bloque `.seek-bar`).
+- Transición base: `all 0.18s cubic-bezier(0.16, 1, 0.3, 1)` en `.glass`; `transform/background/border-color 180ms ease` en `.action-button`.
 
-## Radius
+## Reglas de componente
 
-No radius tokens are declared in `frontend/src/index.css`. Radius values currently come from Tailwind utility classes and must not be represented as source-backed system tokens.
-
-## Shadows
-
-| Usage | Value | Source |
-|---|---|---|
-| Glass resting shadow | `0 4px 24px rgba(2, 6, 23, 0.4)` | `frontend/src/index.css` |
-| Glass hover shadow | `0 12px 40px rgba(2, 6, 23, 0.5)` | `frontend/src/index.css` |
-
-## Effects and motion
-
-| Rule | Value | Usage |
-|---|---|---|
-| Glass backdrop | `blur(24px) saturate(180%)` | `.glass` surface treatment. |
-| Glass transition | `180ms cubic-bezier(0.16, 1, 0.3, 1)` | `.glass` interaction transition. |
-| Smooth scrolling | `scroll-behavior: smooth` | Global `html` behavior. |
-| Reduced motion | Animation and transition duration forced to `0.01ms`; iteration count forced to `1` | Global `prefers-reduced-motion: reduce` rule. |
-
-## Component rules
-
-### Glass surface
-
-- Background: `--color-bg-card`.
-- Border: `--color-border-glass`.
-- Backdrop: `blur(24px) saturate(180%)`.
-- Resting shadow: `0 4px 24px rgba(2, 6, 23, 0.4)`.
-- Hover border: `--color-border-glass-hover`.
-- Hover shadow: `0 12px 40px rgba(2, 6, 23, 0.5)`.
-- Transition: `all 180ms cubic-bezier(0.16, 1, 0.3, 1)`.
-
-### Strong glass surface
-
-- Background: `--color-bg-card-hover`.
-- Inherits the glass border, backdrop, shadow, and interaction behavior unless locally overridden.
-
-### Global surface rule
-
-- Every element uses `--color-border-glass` as its default border color.
-- Primary page canvas and text use `--color-bg-deep` and `--color-text-main`.
-- Secondary text uses `--color-text-muted`.
+- **Foco**: global `:focus-visible` → `outline: 2px solid var(--color-accent-glow); outline-offset: 4px` (`frontend/src/index.css`). Campos: mismo color con offset 1px (`cinematic.css:1193`).
+- **Movimiento reducido**: global, `animation-duration/transition-duration: 0.01ms` bajo `prefers-reduced-motion` (`frontend/src/index.css`).
+- **`.glass`**: panel translúcido con borde y sombra; ojo: declarado con `backdrop-filter: blur(24px) saturate(180%)` en `index.css`, pero la pasada de performance (commit 914aaa5) eliminó el blur de las superficies repetidas y animadas de la app: usar `.glass` solo en paneles únicos, no en listas.
+- **`.action-button` / `.action-primary`**: botón de 48px, primario en indigo sólido con texto `--color-text-main`, hover levanta 2px (`cinematic.css:208`).
+- **`.eyebrow`**: etiqueta de sección con filete (`cinematic.css:161`).
+- **`.explore-field`**: patrón label+input en grid, gap 8px; input oscuro con borde glass-hover (`cinematic.css:1161`).
+- **`.explore-toolbar`**: contenedor de filtros/acciones sobre fondo mezclado 90/10 (`cinematic.css:1149`).
+- **Login actual (mínimo, a rediseñar)**: `.login-form` (columna, máx 420px), `.login-error` (panel de error con borde accent-glow), `.login-switch` (texto 12px + botón link en accent-glow) — `cinematic.css:1466-1495`.

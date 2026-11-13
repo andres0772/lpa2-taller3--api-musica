@@ -1,0 +1,10 @@
+{
+  "title": "YourMusic — Pantalla de login",
+  "brief": "Diseño de /login (entrar y crear cuenta) para YourMusic: lenguaje cinematográfico ya implementado, copy y formularios en español, accesible (foco visible, contraste AA, reduced-motion), con estados reales (crear cuenta, enviando, error de credenciales) y pantalla anguita contemplada.",
+  "feature": "odd/tasks/yourmusic-login-design.md",
+  "artboards": [
+    { "file": "01-escenario-partido.html", "title": "Escenario partido", "tradeoff": "Máxima presencia de marca (disco, haces, copy editorial); el formulario compite con la escena y consume más alto de pantalla", "width": 1440, "height": 900 },
+    { "file": "02-tarjeta-centrada.html", "title": "Tarjeta centrada", "tradeoff": "Camino más corto al formulario y menos ruido; pierde el dramatismo de marca y el espacio vacío es amplio", "width": 1440, "height": 900 },
+    { "file": "03-formulario-con-adelanto.html", "title": "Formulario con adelanto", "tradeoff": "Motiva entrar mostrando el catálogo real (3 temas demo con portadas); más densidad y depende de datos de demostración etiquetados como tales", "width": 1440, "height": 900 }
+  ]
+}

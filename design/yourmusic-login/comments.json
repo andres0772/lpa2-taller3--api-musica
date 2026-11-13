@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "b76ziixg",
+      "file": "01-escenario-partido.html",
+      "selector": "body > div > section",
+      "excerpt": "TU CUENTA Tu banda sonora, contigo. Entrá para que tus favoritos queden atados a tu usuario y te esperen en cualquier dispositivo. Sin cuenta, escuchás el catálogo de demostración. 10 canciones demo Rock, pop, jazz y electrónica · audio de demostración",
+      "comment": "creo que podemos poner como una especie de animacion o algo en movimiento si es posible y no consuma para hacerlo como un login vivo como ese efecto de particula cuando el maus pasa,a si como gotas de agua, si es posible y no afecte el rendimiento, si no entonces no, esto simplemente es capricho.",
+      "createdAt": "2026-11-12T23:40:12.196Z",
+      "status": "resolved",
+      "sentAt": "2026-11-12T23:40:12.218Z",
+      "resolvedAt": "2026-11-12T23:44:12.131Z"
+    },
+    {
+      "id": "s7tpnmr0",
+      "file": "01-escenario-partido.html",
+      "selector": "body > div > section > p:nth-of-type(2) > b",
+      "excerpt": "10 canciones demo",
+      "comment": "podriamos hacer que en las partes donde aparesca esto, el numero 10, cambie automaticamente a el numero de musica que hay actualmente, si se agrega una se cambie, si borramos una tambien, seria algo chulo, tambien es capricho.",
+      "createdAt": "2026-11-12T23:41:00.390Z",
+      "status": "resolved",
+      "sentAt": "2026-11-12T23:41:00.429Z",
+      "resolvedAt": "2026-11-12T23:46:51.514Z"
+    },
+    {
+      "id": "rixee5f3",
+      "file": "01-escenario-partido.html",
+      "selector": "body > div > aside > form > p:nth-of-type(4)",
+      "excerpt": "Estado de envío: el botón se deshabilita y muestra “Entrando…” mientras la API responde; el correo y la contraseña no se borran si falla.",
+      "comment": "imagino que esto es mientras estamos construyendo y no por si sale a publico con un servidor, podemos poner algo mejor tip ceo o aqui que me recomeindas, no es prioritado ni urgente.",
+      "createdAt": "2026-11-12T23:41:59.053Z",
+      "status": "resolved",
+      "sentAt": "2026-11-12T23:41:59.060Z",
+      "resolvedAt": "2026-11-12T23:48:47.744Z"
+    }
+  ]
+}

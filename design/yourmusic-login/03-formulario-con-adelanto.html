@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>YourMusic — Login: formulario con adelanto del catálogo</title>
+<style>
+  :root {
+    --font-sans: "Geist Variable", "Inter Variable", system-ui, sans-serif;
+    --color-bg-deep: #020617;
+    --color-bg-card: rgba(15, 23, 42, 0.72);
+    --color-border-glass: rgba(148, 163, 184, 0.12);
+    --color-border-glass-hover: rgba(148, 163, 184, 0.22);
+    --color-accent-indigo: #4f46e5;
+    --color-accent-glow: #6366f1;
+    --color-text-main: #f1f5f9;
+    --color-text-muted: #94a3b8;
+  }
+  * { box-sizing: border-box; border-color: var(--color-border-glass); }
+  body {
+    margin: 0; min-width: 320px; min-height: 100vh; padding: 40px 24px;
+    background: var(--color-bg-deep); color: var(--color-text-main); font-family: var(--font-sans);
+  }
+  .page { width: min(1060px, 100%); margin: 0 auto; display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 44px; align-items: center; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 10px; color: var(--color-text-muted); font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+  .eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--color-accent-glow); }
+  h1 { font-size: 30px; line-height: 1.15; margin: 14px 0 8px; letter-spacing: -0.01em; }
+  .lede { color: var(--color-text-muted); font-size: 13px; line-height: 1.6; margin: 0 0 20px; max-width: 44ch; }
+  .panel { background: var(--color-bg-card); backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--color-border-glass-hover); border-radius: 20px; box-shadow: 0 18px 60px var(--color-bg-deep); padding: 24px; }
+  .panel h2 { font-size: 17px; margin: 0 0 3px; }
+  .panel .sub { color: var(--color-text-muted); font-size: 12px; margin: 0 0 18px; }
+  .field { display: grid; gap: 8px; margin-bottom: 12px; }
+  .field label { font-size: 9px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--color-text-muted); }
+  .field input { min-height: 46px; padding: 0 14px; border: 1px solid var(--color-border-glass-hover); border-radius: 10px;
+    color: var(--color-text-main); background: var(--color-bg-deep); font: inherit; font-size: 13px; }
+  .field input::placeholder { color: var(--color-text-muted); }
+  .primary { width: 100%; min-height: 46px; border: 0; border-radius: 10px; cursor: pointer; margin-top: 6px;
+    background: var(--color-accent-indigo); color: var(--color-text-main); font: inherit; font-size: 13px; font-weight: 700; }
+  .primary[aria-busy="true"] { opacity: .7; }
+  .error { border: 1px solid var(--color-accent-glow); border-radius: 12px; padding: 11px 13px; margin: 14px 0 0;
+    color: var(--color-text-main); font-size: 12px; line-height: 1.5; background: rgba(99,102,241,.08); }
+  .switch { margin: 16px 0 0; color: var(--color-text-muted); font-size: 12px; }
+  .switch button { border: 0; padding: 0; background: none; color: var(--color-accent-glow); font: inherit; font-weight: 700; cursor: pointer; }
+  .preview h2 { font-size: 9px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--color-text-muted); margin: 0 0 12px; }
+  .song { display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center; padding: 10px 0; border-top: 1px solid var(--color-border-glass); }
+  .song:first-of-type { border-top: 0; }
+  .cover { width: 56px; height: 56px; border-radius: 10px; position: relative; overflow: hidden; border: 1px solid var(--color-border-glass-hover); }
+  .cover span { position: absolute; left: 8px; bottom: 5px; font-size: 9px; font-weight: 700; color: var(--color-text-main); }
+  .cover-a { background: linear-gradient(135deg, #4f46e5, #0b1220); }
+  .cover-b { background: linear-gradient(135deg, #6366f1, #020617); }
+  .cover-c { background: linear-gradient(135deg, #1e293b, #4f46e5); }
+  .song strong { display: block; font-size: 13px; }
+  .song span { font-size: 11px; color: var(--color-text-muted); }
+  .song time { font-size: 10px; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+  .caption { margin: 14px 0 0; font-size: 11px; color: var(--color-text-muted); line-height: 1.5; }
+  :focus-visible { outline: 2px solid var(--color-accent-glow); outline-offset: 2px; }
+  @media (max-width: 900px) {
+    .page { grid-template-columns: 1fr; gap: 24px; }
+    body { padding: 28px 18px; }
+    h1 { font-size: 26px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+<main class="page">
+  <section aria-label="Formulario de cuenta">
+    <span class="eyebrow">Tu cuenta</span>
+    <h1>Entrá y tus favoritos te esperan.</h1>
+    <p class="lede">Con una cuenta, lo que guardás queda atado a tu usuario. Sin cuenta, el catálogo queda como demostración.</p>
+    <form class="panel" novalidate>
+      <h2>Entrar a YourMusic</h2>
+      <p class="sub">Con tu correo y contraseña.</p>
+      <div class="field">
+        <label for="correo">Correo</label>
+        <input id="correo" name="correo" type="email" autocomplete="email" placeholder="tu@correo.com" required />
+      </div>
+      <div class="field">
+        <label for="pass">Contraseña</label>
+        <input id="pass" name="contraseña" type="password" autocomplete="current-password" placeholder="••••••••" required />
+      </div>
+      <button class="primary" type="submit">Entrar</button>
+      <p class="error" role="alert">Ese correo y contraseña no coinciden. Revisá los datos o crear una cuenta nueva.</p>
+      <p class="switch">¿Todavía no tenés cuenta? <button type="button">Crear cuenta</button></p>
+    </form>
+  </section>
+
+  <section class="preview" aria-label="Adelanto del catálogo">
+    <h2>Lo que te espera dentro</h2>
+    <div class="song">
+      <span class="cover cover-a" aria-hidden="true"><span>QR</span></span>
+      <span><strong>Bohemian Rhapsody</strong><span>Queen · Rock</span></span>
+      <time>5:55</time>
+    </div>
+    <div class="song">
+      <span class="cover cover-b" aria-hidden="true"><span>LT</span></span>
+      <span><strong>Stairway to Heaven</strong><span>Led Zeppelin · Rock</span></span>
+      <time>8:02</time>
+    </div>
+    <div class="song">
+      <span class="cover cover-c" aria-hidden="true"><span>MJ</span></span>
+      <span><strong>Billie Jean</strong><span>Michael Jackson · Pop</span></span>
+      <time>4:54</time>
+    </div>
+    <p class="caption">Vista de demostración del catálogo real (10 canciones, audio de demostración). Crear cuenta agrega el campo Nombre; el envío muestra “Entrando…” y conserva lo escrito si falla.</p>
+  </section>
+</main>
+</body>
+</html>
