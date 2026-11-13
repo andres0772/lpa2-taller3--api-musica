@@ -1072,6 +1072,11 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  /* El giro del disco del login se apaga del todo, no solo se acelera. */
+  .login-disc {
+    animation: none;
+  }
 }
 
 /* Movimiento durante la reproducción */
@@ -1463,25 +1468,221 @@
   font-family: inherit;
 }
 
-.login-form {
-  flex-direction: column;
-  align-items: stretch;
-  max-width: 420px;
+/* Login — escenario partido: escena de marca a la izquierda, panel glass a la derecha */
+.login-layout {
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 44px 0 76px;
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(380px, 0.92fr);
+  align-items: center;
+  gap: 56px;
 }
 
-.login-form .action-primary {
+.login-stage {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  padding: 32px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.login-stage h1 {
+  max-width: 14ch;
+  margin: 18px 0 16px;
+  font-size: clamp(40px, 4.4vw, 58px);
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+}
+
+.login-lede {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Haces de luz: gradientes radiales quietos, sin blur animado ni canvas. */
+.login-beam {
+  position: absolute;
+  width: 46vw;
+  max-width: 640px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, var(--color-accent-muted), transparent 68%);
+}
+
+.login-beam-a {
+  top: -18%;
+  left: -8%;
+}
+
+.login-beam-b {
+  right: -6%;
+  bottom: -20%;
+  opacity: 0.55;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-accent-glow) 20%, transparent),
+    transparent 70%
+  );
+}
+
+/* Disco de vinilo: giro lento de 26s, solo transform (se apaga con
+   prefers-reduced-motion por la regla global de más abajo). */
+.login-disc {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  margin-top: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  will-change: transform;
+  background:
+    repeating-radial-gradient(
+      circle at center,
+      transparent 0 6px,
+      var(--color-border-glass) 7px 8px
+    ),
+    radial-gradient(
+      circle at 40% 32%,
+      var(--color-bg-card-hover),
+      var(--color-bg-deep) 54%
+    );
+  border: 1px solid var(--color-border-glass-hover);
+  box-shadow:
+    0 30px 80px var(--color-bg-deep),
+    inset 0 0 40px var(--color-accent-muted);
+  animation: login-disco-giro 26s linear infinite;
+}
+
+.login-disc-label {
+  width: 26%;
+  aspect-ratio: 1;
+  padding: 0 4px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--color-text-main);
+  background: var(--color-accent-indigo);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Contador del catálogo: el número sale del catálogo cargado. */
+.login-catalogo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 34px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.login-catalogo-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.login-catalogo-copy strong {
+  color: var(--color-text-main);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.login-catalogo-copy span {
+  line-height: 1.5;
+}
+
+.login-aside {
+  display: grid;
+  place-items: center;
+}
+
+.login-panel {
+  width: min(430px, 100%);
+  padding: 28px;
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--color-border-glass-hover);
+  border-radius: 20px;
+  background: color-mix(
+    in srgb,
+    var(--color-bg-deep) 88%,
+    var(--color-accent-indigo) 12%
+  );
+  box-shadow: 0 18px 60px var(--color-bg-deep);
+}
+
+.login-panel-head {
+  margin-bottom: 6px;
+}
+
+.login-panel h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.login-sub {
+  margin: 6px 0 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.login-panel .action-primary {
+  width: 100%;
   min-height: 48px;
   margin-top: 6px;
 }
 
+.login-spinner {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--color-text-main) 35%, transparent);
+  border-top-color: var(--color-text-main);
+  animation: login-spinner-giro 0.7s linear infinite;
+}
+
+.login-submit[aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.72;
+}
+
+.login-submit:disabled {
+  cursor: progress;
+  opacity: 0.72;
+}
+
+.login-submit:disabled:hover {
+  transform: none;
+}
+
 .login-error {
-  max-width: 420px;
-  margin-top: 16px;
-  border-color: var(--color-accent-glow);
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-accent-glow);
+  border-radius: 12px;
+  color: var(--color-text-main);
+  background: color-mix(in srgb, var(--color-accent-glow) 8%, transparent);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .login-switch {
-  margin: 22px 0 0;
+  margin: 4px 0 0;
   color: var(--color-text-muted);
   font-size: 12px;
 }
@@ -1495,4 +1696,83 @@
   font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
+}
+
+/* Gotas del puntero sobre la escena: un nodo por gota, solo transform/opacity. */
+.login-drop {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-accent-glow);
+  background: color-mix(in srgb, var(--color-accent-glow) 18%, transparent);
+  pointer-events: none;
+  animation: login-gota 620ms ease-out forwards;
+}
+
+@keyframes login-disco-giro {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes login-spinner-giro {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes login-gota {
+  from {
+    transform: scale(0.2);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 980px) {
+  .login-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    padding-top: 32px;
+  }
+
+  .login-stage {
+    min-height: 0;
+    padding-bottom: 8px;
+  }
+
+  .login-disc {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-layout {
+    width: min(100% - 32px, 1320px);
+    padding-bottom: 48px;
+  }
+
+  .login-stage h1 {
+    font-size: clamp(30px, 8.6vw, 40px);
+  }
+
+  .login-catalogo {
+    align-items: flex-start;
+  }
+
+  .login-panel {
+    padding: 22px;
+    border-radius: 16px;
+  }
 }
