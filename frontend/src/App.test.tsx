@@ -8,7 +8,7 @@ describe("App", () => {
     vi.unstubAllGlobals();
   });
 
-  it("opens the luminous favorites view at /favoritos", () => {
+  it("opens the luminous favorites view at /favoritos", async () => {
     window.history.pushState({}, "", "/favoritos");
     vi.stubGlobal(
       "fetch",
@@ -24,7 +24,27 @@ describe("App", () => {
     render(<App />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Tu archivo luminoso" }),
+      await screen.findByRole("heading", { level: 1, name: "Tu archivo luminoso" }),
+    ).toBeInTheDocument();
+  });
+
+  it("opens the login view at /login", async () => {
+    window.history.pushState({}, "", "/login");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request) => {
+        const url = String(input);
+        if (url.includes("/api/canciones")) {
+          return { ok: true, json: async () => [] } as Response;
+        }
+        return { ok: true, json: async () => ({}) } as Response;
+      }),
+    );
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Tu banda sonora, contigo." }),
     ).toBeInTheDocument();
   });
 

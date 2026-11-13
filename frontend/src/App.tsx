@@ -1,23 +1,39 @@
-import Home from "@/pages/Home";
-import Explore from "@/pages/Explore";
-import Favorites from "@/pages/Favorites";
-import Login from "@/pages/Login";
+import { Suspense, lazy } from "react";
 import { AppToaster } from "@/components/AppToaster";
+
+// Carga por ruta: cada pantalla viaja en su propio paquete, así que el login
+// ya no arrastra el código de portada, exploración y favoritos.
+const Home = lazy(() => import("@/pages/Home"));
+const Explore = lazy(() => import("@/pages/Explore"));
+const Favorites = lazy(() => import("@/pages/Favorites"));
+const Login = lazy(() => import("@/pages/Login"));
 
 function App() {
   const path = window.location.pathname;
 
+  let pagina;
+  if (path.startsWith("/favoritos")) {
+    pagina = <Favorites />;
+  } else if (path.startsWith("/canciones")) {
+    pagina = <Explore />;
+  } else if (path.startsWith("/login")) {
+    pagina = <Login />;
+  } else {
+    pagina = <Home />;
+  }
+
   return (
     <>
-      {path.startsWith("/favoritos") ? (
-        <Favorites />
-      ) : path.startsWith("/canciones") ? (
-        <Explore />
-      ) : path.startsWith("/login") ? (
-        <Login />
-      ) : (
-        <Home />
-      )}
+      <Suspense
+        fallback={
+          <div className="archive-state" role="status">
+            <span className="loading-pulse" aria-hidden="true" />
+            <p>Cargando…</p>
+          </div>
+        }
+      >
+        {pagina}
+      </Suspense>
       <AppToaster />
     </>
   );
