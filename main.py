@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from musica_api.config import get_settings
+from musica_api.config import get_settings, resolver_nivel_log, validate_settings
 from musica_api.database import create_db_and_tables
 from musica_api.routers import (
     auth_router,
@@ -19,9 +19,9 @@ from musica_api.routers import (
 
 settings = get_settings()
 
-# Configurar logging
+# Configurar logging: el nivel se lee de la configuración (LOG_LEVEL en .env)
 logging.basicConfig(
-    level=logging.INFO,
+    level=resolver_nivel_log(settings.log_level),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("api_musica")
@@ -33,7 +33,10 @@ async def lifespan(app: FastAPI):
     Gestor de ciclo de vida de la aplicación.
     Se ejecuta al iniciar y al cerrar la aplicación.
     """
-    # Startup: Crear tablas en la base de datos
+    # Startup: validar la configuración antes de servir tráfico
+    validate_settings()
+
+    # Crear tablas en la base de datos
     create_db_and_tables()
     yield
 
@@ -48,7 +51,6 @@ app = FastAPI(
     description="API RESTful para gestionar usuarios, canciones y favoritos",
     version="1.0.0",
     lifespan=lifespan,
-    # TODO: Agregar información de contacto y licencia
 )
 
 

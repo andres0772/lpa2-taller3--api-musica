@@ -3,7 +3,13 @@ Configuración de la aplicación.
 Maneja diferentes entornos: desarrollo, pruebas y producción.
 """
 
+import logging
+from typing import Literal
+
 from pydantic_settings import BaseSettings
+
+# Entornos válidos: un typo en .env falla al arrancar, no en la primera consulta.
+ENTORNO = Literal["development", "testing", "production"]
 
 
 class Settings(BaseSettings):
@@ -17,8 +23,7 @@ class Settings(BaseSettings):
     app_version: str = "1.0.0"
 
     # Configuración del entorno
-    # environment: Literal["development", "testing", "production"] = "development"
-    environment: str = "development"
+    environment: ENTORNO = "development"
 
     # Configuración de la base de datos
     # Para SQLite: sqlite:///./musica.db
@@ -30,17 +35,12 @@ class Settings(BaseSettings):
     port: int = 8000
     debug: bool = True
 
+    # Nivel de logging de la aplicación: DEBUG, INFO, WARNING, ERROR o CRITICAL
+    log_level: str = "INFO"
+
     # Configuración de CORS
     # En desarrollo puedes usar ["*"], en producción especifica los orígenes permitidos
     cors_origins: list[str] = ["*"]
-
-    # TODO: Configuración de seguridad (para futuras mejoras)
-    # secret_key: str = "your-secret-key-here"  # Cambiar en producción
-    # algorithm: str = "HS256"
-    # access_token_expire_minutes: int = 30
-
-    # TODO: Configuración de logging
-    # log_level: str = "INFO"
 
     class Config:
         """
@@ -50,13 +50,6 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
-
-        # TODO: Opcional - Agregar validación personalizada
-        # @validator("database_url")
-        # def validate_database_url(cls, v):
-        #     if not v:
-        #         raise ValueError("DATABASE_URL no puede estar vacío")
-        #     return v
 
 
 # Crear una instancia global de Settings
@@ -68,7 +61,6 @@ class DevelopmentSettings(Settings):
     """Configuración para el entorno de desarrollo."""
 
     debug: bool = True
-    # TODO: Agregar configuraciones específicas de desarrollo
 
 
 class TestingSettings(Settings):
@@ -76,16 +68,12 @@ class TestingSettings(Settings):
 
     # Usar una base de datos diferente para pruebas
     database_url: str = "sqlite:///./test_musica.db"
-    # TODO: Agregar configuraciones específicas de pruebas
 
 
 class ProductionSettings(Settings):
     """Configuración para el entorno de producción."""
 
     debug: bool = False
-    # TODO: Agregar configuraciones específicas de producción
-    # TODO: Cambiar a una base de datos más robusta (PostgreSQL, MySQL)
-    # database_url: str = "postgresql://user:password@localhost/musica_prod"
 
 
 # Función para obtener la configuración según el entorno
@@ -103,10 +91,27 @@ def get_settings() -> Settings:
         return DevelopmentSettings()
 
 
-# TODO: Opcional - Agregar validación de configuración al inicio
-# def validate_settings():
-#     """Valida que todas las configuraciones necesarias estén presentes."""
-#     required_settings = ["database_url", "app_name"]
-#     for setting in required_settings:
-#         if not getattr(settings, setting, None):
-#             raise ValueError(f"Configuración requerida no encontrada: {setting}")
+def resolver_nivel_log(valor: str) -> int:
+    """
+    Traduce el nivel configurado (texto) al nivel numérico de logging.
+
+    Un valor desconocido degrada a INFO en lugar de romper el arranque: un typo
+    en LOG_LEVEL no debe tumbar la API.
+    """
+    return getattr(logging, str(valor).strip().upper(), logging.INFO)
+
+
+# Configuración que la aplicación no puede arrancar sin ella
+AJUSTES_REQUERIDOS = ("database_url", "app_name")
+
+
+def validate_settings() -> None:
+    """
+    Verifica que la configuración requerida esté presente.
+
+    Se llama al arrancar (lifespan): falla rápido y con mensaje claro en vez de
+    descubrir el problema en la primera consulta a la base de datos.
+    """
+    for nombre in AJUSTES_REQUERIDOS:
+        if not str(getattr(settings, nombre, "") or "").strip():
+            raise ValueError(f"Configuración requerida no encontrada: {nombre}")

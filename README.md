@@ -33,7 +33,6 @@ lpa2-taller3
 ├── 󰌠 requirements.txt     # Dependencias del proyecto
 ├── 󰙨 tests
 │   └──  test_api.py      # Pruebas Unitarias
-└──  utils.py             # Funciones de utilidad
 
 ```
 ## Modelo de Datos
@@ -84,6 +83,24 @@ lpa2-taller3
    ```
 
 4. Ajusta las variables de entorno, editando el archivo `.env`
+
+## Configuración
+
+La aplicación lee su configuración de `.env` (o de variables de entorno reales)
+con Pydantic Settings. Los valores por defecto sirven para desarrollo.
+
+| Variable | Descripción | Valor por defecto |
+| --- | --- | --- |
+| `ENVIRONMENT` | Entorno: `development`, `testing` o `production` (validado) | `development` |
+| `DATABASE_URL` | Cadena de conexión a la base de datos | `sqlite:///./musica.db` |
+| `HOST` | Interfaz donde escucha el servidor | `0.0.0.0` |
+| `PORT` | Puerto del servidor | `8000` |
+| `DEBUG` | Modo depuración | `true` |
+| `LOG_LEVEL` | Nivel de logging: `DEBUG`, `INFO`, `WARNING`, `ERROR` o `CRITICAL` | `INFO` |
+| `CORS_ORIGINS` | Orígenes permitidos por CORS | `["*"]` |
+
+Un valor inválido en `ENVIRONMENT`, o una variable requerida vacía, hace que la
+aplicación falle al arrancar con un mensaje claro en lugar de fallar después.
 
 ## Ejecución
 
