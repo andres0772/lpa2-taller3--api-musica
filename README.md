@@ -32,7 +32,7 @@ lpa2-taller3
 │   └──  *                # Implementación del API
 ├── 󰌠 requirements.txt     # Dependencias del proyecto
 ├── 󰙨 tests
-│   └──  test_api.py      # Pruebas Unitarias
+│   └──  test_*.py        # Pruebas automatizadas
 
 ```
 ## Modelo de Datos

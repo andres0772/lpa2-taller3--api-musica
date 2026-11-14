@@ -29,5 +29,16 @@ repos:
       - id: check-case-conflict
       - id: check-merge-conflict
 
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        # `python -m pytest` y no `pytest` solo: el script no mete el directorio
+        # del proyecto en sys.path y entonces `import main` falla al colectar.
+        entry: uv run python -m pytest
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
 default_language_version:
   python: python3.14
