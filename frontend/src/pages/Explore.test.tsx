@@ -76,6 +76,13 @@ function mockApi(options: {
     if (method === "DELETE" && url.includes("/api/usuarios/1/favoritos/1")) {
       return { ok: true, status: 204, json: async () => undefined } as Response;
     }
+    if (url.includes("/api/auth/me")) {
+      // useSesion valida el token guardado al montar.
+      return {
+        ok: true,
+        json: async () => ({ id: 1, nombre: "Ana Demo", correo: "ana@example.com" }),
+      } as Response;
+    }
     if (url.includes("/api/canciones/buscar")) {
       return { ok: true, json: async () => options.buscar ?? songs } as Response;
     }
@@ -88,9 +95,21 @@ function mockApi(options: {
   return fetchMock;
 }
 
+// El camino feliz de favoritos exige sesión: la API responde 401 sin token.
+function conSesionIniciada() {
+  localStorage.setItem("yourmusic.token", "token-de-prueba");
+  localStorage.setItem(
+    "yourmusic.usuario",
+    JSON.stringify({ id: 1, nombre: "Ana Demo", correo: "ana@example.com" }),
+  );
+}
+
 describe("Explore", () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
+    // La sesión vive en localStorage: si un test la deja, el siguiente arranca
+    // con token ajeno y useSesion pide /api/auth/me antes que el catálogo.
+    localStorage.clear();
   });
 
   afterEach(() => {
@@ -100,6 +119,7 @@ describe("Explore", () => {
 
   it("confirms favorites changes with toasts", async () => {
     const fetchMock = mockApi();
+    conSesionIniciada();
 
     render(
       <>
@@ -120,6 +140,7 @@ describe("Explore", () => {
 
   it("shows the API's honest message when the favorite already exists", async () => {
     mockApi({ favoritoDuplicado: true });
+    conSesionIniciada();
 
     render(
       <>
@@ -361,6 +382,7 @@ describe("Explore", () => {
 
   it("saves a song to favorites from the catalog", async () => {
     const fetchMock = mockApi();
+    conSesionIniciada();
 
     render(<Explore />
     );

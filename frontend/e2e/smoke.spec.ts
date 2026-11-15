@@ -395,3 +395,34 @@ test("registers, scopes favorites to the session user and logs out", async ({
   await page.getByRole("button", { name: "Salir" }).click();
   await expect(page.getByRole("link", { name: "Iniciar sesión" })).toBeVisible();
 });
+
+test("manda al login a quien intenta guardar un favorito sin sesión", async ({
+  page,
+}) => {
+  // Decisión de producto del taller: guardar favoritos exige cuenta, así que
+  // sin sesión no se llama a la API (su 401 no le dice nada al visitante).
+  const llamadasFavoritos: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/favoritos")) {
+      llamadasFavoritos.push(`${request.method()} ${request.url()}`);
+    }
+  });
+
+  await page.route("**/api/canciones**", async (route) => {
+    await route.fulfill({ json: [cancion, cancionDos] });
+  });
+  await mockPortadas(page);
+
+  await page.goto("/canciones");
+  await page
+    .getByRole("button", { name: 'Guardar "Stairway to Heaven" en favoritos' })
+    .click();
+
+  // La app navega con recargas completas: la redirección se ve en la URL.
+  await expect
+    .poll(() => new URL(page.url()).pathname, { timeout: 5000 })
+    .toBe("/login");
+
+  // Y la API de favoritos nunca fue llamada: el visitante no recibe el 401 crudo.
+  expect(llamadasFavoritos).toEqual([]);
+});

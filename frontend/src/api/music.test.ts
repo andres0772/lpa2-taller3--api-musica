@@ -1,5 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
-import { ApiError, audioUrl, buscarCanciones, crearFavorito, portadaUrl, quitarFavorito } from "./music";
+import {
+  ApiError,
+  audioUrl,
+  buscarCanciones,
+  conSesion,
+  crearFavorito,
+  portadaUrl,
+  quitarFavorito,
+} from "./music";
 
 describe("audioUrl", () => {
   it("resolves the API's relative audio paths against the API origin", () => {
@@ -32,8 +40,79 @@ describe("audioUrl", () => {
       })),
     );
 
-    await expect(quitarFavorito(1, 2)).resolves.toBeUndefined();
+    await expect(quitarFavorito(1, 2, "token-de-sesion")).resolves.toBeUndefined();
     vi.unstubAllGlobals();
+  });
+
+  it("sends the session token when marking a favorite", async () => {
+    const fetchMock = vi.fn<
+      (
+        input: string | URL | Request,
+        init?: RequestInit,
+      ) => Promise<{ ok: boolean; json: () => Promise<unknown> }>
+    >(async () => ({
+      ok: true,
+      json: async () => ({}),
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await crearFavorito(1, 2, "token-de-sesion");
+
+    const init = fetchMock.mock.calls[0]?.[1];
+    expect(init?.method).toBe("POST");
+    expect(init?.headers).toEqual({ "X-Session-Token": "token-de-sesion" });
+    vi.unstubAllGlobals();
+  });
+
+  it("sends the session token when removing a favorite", async () => {
+    const fetchMock = vi.fn<
+      (
+        input: string | URL | Request,
+        init?: RequestInit,
+      ) => Promise<{ ok: boolean; json: () => Promise<never> }>
+    >(async () => ({
+      ok: true,
+      json: async () => {
+        throw new SyntaxError("Unexpected end of JSON input");
+      },
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await quitarFavorito(1, 2, "token-de-sesion");
+
+    const init = fetchMock.mock.calls[0]?.[1];
+    expect(init?.method).toBe("DELETE");
+    expect(init?.headers).toEqual({ "X-Session-Token": "token-de-sesion" });
+    vi.unstubAllGlobals();
+  });
+
+describe("conSesion", () => {
+    it("no llama a la API y manda al login cuando no hay sesión", async () => {
+      localStorage.clear();
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      const sinSesion = vi.fn();
+      const accion = vi.fn(async () => "no tenía que correr");
+
+      const resultado = await conSesion(accion, sinSesion);
+
+      expect(sinSesion).toHaveBeenCalledTimes(1);
+      expect(accion).not.toHaveBeenCalled();
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(resultado).toBeNull();
+      vi.unstubAllGlobals();
+    });
+
+    it("ejecuta la acción con el token cuando hay sesión", async () => {
+      localStorage.setItem("yourmusic.token", "token-de-sesion");
+      const accion = vi.fn(async (token: string) => token);
+
+      const resultado = await conSesion(accion, vi.fn());
+
+      expect(resultado).toBe("token-de-sesion");
+      expect(accion).toHaveBeenCalledWith("token-de-sesion");
+      localStorage.clear();
+    });
   });
 
   it("searches title and artist together in either-or mode", async () => {
@@ -66,7 +145,7 @@ describe("audioUrl", () => {
       })),
     );
 
-    const error = await crearFavorito(1, 2).catch((e) => e);
+    const error = await crearFavorito(1, 2, "token-de-sesion").catch((e) => e);
 
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).estado).toBe(409);

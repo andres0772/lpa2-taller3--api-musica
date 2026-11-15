@@ -176,6 +176,11 @@ Las instrucciones completas del frontend están en [`frontend/README.md`](fronte
 - **Marcar favorito específico**: `POST /api/usuarios/{id_usuario}/favoritos/{id_cancion}`
 - **Eliminar favorito específico**: `DELETE /api/usuarios/{id_usuario}/favoritos/{id_cancion}`
 
+Marcar y quitar favoritos exige la sesión del dueño: viajan con el header
+`X-Session-Token` y fallan con **401** si falta o no sirve, y con **403** si el
+favorito es de otro usuario. Los `GET` siguen siendo públicos. El frente redirige
+a `/login` a quien intenta guardar sin sesión, en lugar de mostrar ese 401.
+
 ### Autenticación
 
 Sesiones con token opaco. La contraseña se guarda solo como hash PBKDF2 y el

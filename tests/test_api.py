@@ -10,7 +10,8 @@ from sqlmodel.pool import StaticPool
 
 from main import app
 from musica_api.database import get_session
-from musica_api.models import Cancion, Favorito, Genero, Usuario
+from musica_api.models import Cancion, Favorito, Genero, Sesion, Usuario
+from musica_api.security import expiracion_sesion, hash_token, nuevo_token
 
 # =============================================================================
 # CONFIGURACIÓN DE FIXTURES
@@ -121,6 +122,32 @@ def cancion_test_2_fixture(session: Session):
     session.commit()
     session.refresh(cancion)
     return cancion
+
+
+def token_de_sesion(session: Session, usuario_id: int) -> str:
+    """
+    Abre una sesión vigente para el usuario y devuelve su token opaco.
+
+    Reusa el mecanismo real de `musica_api.security` (el mismo que usa el
+    login): la fila `Sesion` guarda solo el hash del token.
+    """
+    token = nuevo_token()
+    session.add(
+        Sesion(
+            usuario_id=usuario_id,
+            token_hash=hash_token(token),
+            expira=expiracion_sesion(),
+        )
+    )
+    session.commit()
+    return token
+
+
+# Fixture para crear el token de sesión del usuario de prueba
+@pytest.fixture(name="token_usuario_test")
+def token_usuario_test_fixture(session: Session, usuario_test: Usuario) -> str:
+    """Token de sesión vigente del usuario de prueba (dueño de sus favoritos)."""
+    return token_de_sesion(session, usuario_test.id)
 
 
 # Fixture para crear favorito de prueba
@@ -678,11 +705,18 @@ class TestFavoritosPlanos:
         assert response.status_code == 200
         assert response.json() == []
 
-    def test_crear_favorito(self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion):
+    def test_crear_favorito(
+        self,
+        client: TestClient,
+        usuario_test: Usuario,
+        cancion_test: Cancion,
+        token_usuario_test: str,
+    ):
         """Test POST /api/favoritos."""
         response = client.post(
             "/api/favoritos",
             json={"id_usuario": usuario_test.id, "id_cancion": cancion_test.id},
+            headers={"X-Session-Token": token_usuario_test},
         )
         assert response.status_code == 201
         data = response.json()
@@ -691,27 +725,36 @@ class TestFavoritosPlanos:
         assert "id" in data
         assert "fecha_marcado" in data
 
-    def test_crear_favorito_usuario_inexistente(self, client: TestClient, cancion_test: Cancion):
+    def test_crear_favorito_usuario_inexistente(
+        self, client: TestClient, cancion_test: Cancion, token_usuario_test: str
+    ):
         """Test crear favorito con usuario inexistente."""
         response = client.post(
             "/api/favoritos",
             json={"id_usuario": 999, "id_cancion": cancion_test.id},
+            headers={"X-Session-Token": token_usuario_test},
         )
         assert response.status_code == 404
 
-    def test_crear_favorito_cancion_inexistente(self, client: TestClient, usuario_test: Usuario):
+    def test_crear_favorito_cancion_inexistente(
+        self, client: TestClient, usuario_test: Usuario, token_usuario_test: str
+    ):
         """Test crear favorito con canción inexistente."""
         response = client.post(
             "/api/favoritos",
             json={"id_usuario": usuario_test.id, "id_cancion": 999},
+            headers={"X-Session-Token": token_usuario_test},
         )
         assert response.status_code == 404
 
-    def test_crear_favorito_duplicado(self, client: TestClient, favorito_test: Favorito):
+    def test_crear_favorito_duplicado(
+        self, client: TestClient, favorito_test: Favorito, token_usuario_test: str
+    ):
         """Test crear favorito duplicado (mismo usuario + canción)."""
         response = client.post(
             "/api/favoritos",
             json={"id_usuario": favorito_test.id_usuario, "id_cancion": favorito_test.id_cancion},
+            headers={"X-Session-Token": token_usuario_test},
         )
         assert response.status_code == 409
         assert "ya está en favoritos" in response.json()["detail"]
@@ -728,17 +771,27 @@ class TestFavoritosPlanos:
         response = client.get("/api/favoritos/999")
         assert response.status_code == 404
 
-    def test_eliminar_favorito(self, client: TestClient, favorito_test: Favorito):
+    def test_eliminar_favorito(
+        self, client: TestClient, favorito_test: Favorito, token_usuario_test: str
+    ):
         """Test DELETE /api/favoritos/{id}."""
-        response = client.delete(f"/api/favoritos/{favorito_test.id}")
+        response = client.delete(
+            f"/api/favoritos/{favorito_test.id}",
+            headers={"X-Session-Token": token_usuario_test},
+        )
         assert response.status_code == 204
 
         response = client.get(f"/api/favoritos/{favorito_test.id}")
         assert response.status_code == 404
 
-    def test_eliminar_favorito_no_existe(self, client: TestClient):
+    def test_eliminar_favorito_no_existe(
+        self, client: TestClient, usuario_test: Usuario, token_usuario_test: str
+    ):
         """Test eliminar favorito inexistente."""
-        response = client.delete("/api/favoritos/999")
+        response = client.delete(
+            "/api/favoritos/999",
+            headers={"X-Session-Token": token_usuario_test},
+        )
         assert response.status_code == 404
 
     def test_listar_favoritos_usuario_plano(self, client: TestClient, favorito_test: Favorito):
@@ -780,36 +833,59 @@ class TestFavoritosAnidados:
         assert response.status_code == 404
 
     def test_marcar_favorito_usuario(
-        self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
+        self,
+        client: TestClient,
+        usuario_test: Usuario,
+        cancion_test: Cancion,
+        token_usuario_test: str,
     ):
         """Test POST /api/usuarios/{id_usuario}/favoritos/{id_cancion}."""
-        response = client.post(f"/api/usuarios/{usuario_test.id}/favoritos/{cancion_test.id}")
+        response = client.post(
+            f"/api/usuarios/{usuario_test.id}/favoritos/{cancion_test.id}",
+            headers={"X-Session-Token": token_usuario_test},
+        )
         assert response.status_code == 201
         data = response.json()
         assert data["id_usuario"] == usuario_test.id
         assert data["id_cancion"] == cancion_test.id
 
-    def test_marcar_favorito_usuario_inexistente(self, client: TestClient, cancion_test: Cancion):
+    def test_marcar_favorito_usuario_inexistente(
+        self, client: TestClient, cancion_test: Cancion, token_usuario_test: str
+    ):
         """Test marcar favorito con usuario inexistente."""
-        response = client.post(f"/api/usuarios/999/favoritos/{cancion_test.id}")
+        response = client.post(
+            f"/api/usuarios/999/favoritos/{cancion_test.id}",
+            headers={"X-Session-Token": token_usuario_test},
+        )
         assert response.status_code == 404
 
-    def test_marcar_favorito_cancion_inexistente(self, client: TestClient, usuario_test: Usuario):
+    def test_marcar_favorito_cancion_inexistente(
+        self, client: TestClient, usuario_test: Usuario, token_usuario_test: str
+    ):
         """Test marcar favorito con canción inexistente."""
-        response = client.post(f"/api/usuarios/{usuario_test.id}/favoritos/999")
+        response = client.post(
+            f"/api/usuarios/{usuario_test.id}/favoritos/999",
+            headers={"X-Session-Token": token_usuario_test},
+        )
         assert response.status_code == 404
 
-    def test_marcar_favorito_duplicado_anidado(self, client: TestClient, favorito_test: Favorito):
+    def test_marcar_favorito_duplicado_anidado(
+        self, client: TestClient, favorito_test: Favorito, token_usuario_test: str
+    ):
         """Test marcar favorito duplicado vía endpoint anidado."""
         response = client.post(
-            f"/api/usuarios/{favorito_test.id_usuario}/favoritos/{favorito_test.id_cancion}"
+            f"/api/usuarios/{favorito_test.id_usuario}/favoritos/{favorito_test.id_cancion}",
+            headers={"X-Session-Token": token_usuario_test},
         )
         assert response.status_code == 409
 
-    def test_quitar_favorito_usuario(self, client: TestClient, favorito_test: Favorito):
+    def test_quitar_favorito_usuario(
+        self, client: TestClient, favorito_test: Favorito, token_usuario_test: str
+    ):
         """Test DELETE /api/usuarios/{id_usuario}/favoritos/{id_cancion}."""
         response = client.delete(
-            f"/api/usuarios/{favorito_test.id_usuario}/favoritos/{favorito_test.id_cancion}"
+            f"/api/usuarios/{favorito_test.id_usuario}/favoritos/{favorito_test.id_cancion}",
+            headers={"X-Session-Token": token_usuario_test},
         )
         assert response.status_code == 204
 
@@ -819,10 +895,17 @@ class TestFavoritosAnidados:
         assert len(response.json()) == 0
 
     def test_quitar_favorito_no_existe(
-        self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
+        self,
+        client: TestClient,
+        usuario_test: Usuario,
+        cancion_test: Cancion,
+        token_usuario_test: str,
     ):
         """Test quitar favorito que no existe."""
-        response = client.delete(f"/api/usuarios/{usuario_test.id}/favoritos/{cancion_test.id}")
+        response = client.delete(
+            f"/api/usuarios/{usuario_test.id}/favoritos/{cancion_test.id}",
+            headers={"X-Session-Token": token_usuario_test},
+        )
         assert response.status_code == 404
 
 
@@ -834,7 +917,7 @@ class TestFavoritosAnidados:
 class TestIntegracion:
     """Tests de integración que prueban flujos completos."""
 
-    def test_flujo_completo_usuario_cancion_favorito(self, client: TestClient):
+    def test_flujo_completo_usuario_cancion_favorito(self, client: TestClient, session: Session):
         """Test que verifica el flujo completo de la aplicación."""
         # 1. Crear usuario
         response = client.post(
@@ -844,6 +927,7 @@ class TestIntegracion:
         assert response.status_code == 201
         usuario = response.json()
         usuario_id = usuario["id"]
+        token = token_de_sesion(session, usuario_id)
 
         # 2. Crear canción
         response = client.post(
@@ -860,8 +944,11 @@ class TestIntegracion:
         cancion = response.json()
         cancion_id = cancion["id"]
 
-        # 3. Marcar como favorito (endpoint anidado)
-        response = client.post(f"/api/usuarios/{usuario_id}/favoritos/{cancion_id}")
+        # 3. Marcar como favorito (endpoint anidado, con la sesión del dueño)
+        response = client.post(
+            f"/api/usuarios/{usuario_id}/favoritos/{cancion_id}",
+            headers={"X-Session-Token": token},
+        )
         assert response.status_code == 201
         favorito = response.json()
         assert favorito["id_usuario"] == usuario_id
@@ -883,13 +970,14 @@ class TestIntegracion:
         assert favoritos[0]["id_usuario"] == usuario_id
         assert favoritos[0]["id_cancion"] == cancion_id
 
-    def test_cascada_eliminar_usuario_borra_favoritos(self, client: TestClient):
+    def test_cascada_eliminar_usuario_borra_favoritos(self, client: TestClient, session: Session):
         """Test que al borrar usuario se borran sus favoritos (cascade)."""
         # Crear usuario, canción, favorito
         u_resp = client.post(
             "/api/usuarios", json={"nombre": "Cascade User", "correo": "cascade@test.com"}
         )
         usuario_id = u_resp.json()["id"]
+        token = token_de_sesion(session, usuario_id)
 
         c_resp = client.post(
             "/api/canciones",
@@ -903,7 +991,10 @@ class TestIntegracion:
         )
         cancion_id = c_resp.json()["id"]
 
-        client.post(f"/api/usuarios/{usuario_id}/favoritos/{cancion_id}")
+        client.post(
+            f"/api/usuarios/{usuario_id}/favoritos/{cancion_id}",
+            headers={"X-Session-Token": token},
+        )
 
         # Verificar favorito existe
         resp = client.get("/api/favoritos")
@@ -920,12 +1011,13 @@ class TestIntegracion:
         resp = client.get(f"/api/canciones/{cancion_id}")
         assert resp.status_code == 200
 
-    def test_cascada_eliminar_cancion_borra_favoritos(self, client: TestClient):
+    def test_cascada_eliminar_cancion_borra_favoritos(self, client: TestClient, session: Session):
         """Test que al borrar canción se borran sus favoritos (cascade)."""
         u_resp = client.post(
             "/api/usuarios", json={"nombre": "Cascade User 2", "correo": "cascade2@test.com"}
         )
         usuario_id = u_resp.json()["id"]
+        token = token_de_sesion(session, usuario_id)
 
         c_resp = client.post(
             "/api/canciones",
@@ -939,7 +1031,10 @@ class TestIntegracion:
         )
         cancion_id = c_resp.json()["id"]
 
-        client.post(f"/api/usuarios/{usuario_id}/favoritos/{cancion_id}")
+        client.post(
+            f"/api/usuarios/{usuario_id}/favoritos/{cancion_id}",
+            headers={"X-Session-Token": token},
+        )
 
         # Verificar favorito existe
         resp = client.get("/api/favoritos")

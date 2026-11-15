@@ -7,6 +7,10 @@ Endpoints planos (admin/sistema):
 - GET    /api/favoritos/{id}                 - Obtener favorito por ID
 - DELETE /api/favoritos/{id}                 - Eliminar favorito por ID
 
+Los endpoints que escriben (POST y DELETE) exigen la sesión del dueño:
+viajan con el header `X-Session-Token` y fallan con 401 si falta o no sirve,
+y con 403 si el favorito es de otro usuario. Los GET siguen siendo públicos.
+
 Endpoints anidados (usuario final):
 - GET    /api/usuarios/{id_usuario}/favoritos           - Favoritos de un usuario
 - POST   /api/usuarios/{id_usuario}/favoritos/{id_cancion} - Marcar favorito
@@ -27,6 +31,9 @@ from musica_api.models import (
     FavoritoRead,
     Usuario,
 )
+from musica_api.routers.auth import usuario_del_token
+
+UsuarioActual = Annotated[Usuario, Depends(usuario_del_token)]
 
 router = APIRouter(prefix="/api/favoritos", tags=["Favoritos"])
 logger = logging.getLogger("api_musica.favoritos")
@@ -74,18 +81,24 @@ def listar_favoritos(
     response_model=FavoritoRead,
     status_code=status.HTTP_201_CREATED,
     summary="Crear favorito",
-    description="Crea un favorito asociando usuario y canción (body JSON).",
+    description=(
+        "Crea un favorito asociando usuario y canción (body JSON). "
+        "Requiere el header X-Session-Token del usuario dueño."
+    ),
 )
 def crear_favorito(
     favorito_data: FavoritoCreate,
     session: Annotated[Session, Depends(get_session)],
+    usuario_sesion: UsuarioActual,
 ) -> FavoritoRead:
     """
     Crea un favorito nuevo.
 
-    - **id_usuario**: ID del usuario existente
+    - **id_usuario**: ID del usuario existente (debe ser el de la sesión)
     - **id_cancion**: ID de la canción existente
 
+    Retorna 401 si falta o no sirve el token de sesión.
+    Retorna 403 si el favorito es para otro usuario.
     Retorna 404 si usuario o canción no existen.
     Retorna 409 si ya existe ese favorito (unique constraint).
     """
@@ -98,6 +111,18 @@ def crear_favorito(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Usuario con id {favorito_data.id_usuario} no encontrado",
+        )
+
+    # El favorito solo puede marcarlo el dueño de la sesión vigente.
+    # La dependencia ya devolvió 401 si el token faltaba o no servía.
+    if favorito_data.id_usuario != usuario_sesion.id:
+        logger.warning(
+            f"Intento de crear favorito ajeno: sesion={usuario_sesion.id}, "
+            f"usuario={favorito_data.id_usuario}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo podés marcar favoritos de tu propio usuario",
         )
 
     # Verificar que canción existe
@@ -169,15 +194,21 @@ def obtener_favorito(
     "/{favorito_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Eliminar favorito por ID",
-    description="Elimina un favorito específico por su ID.",
+    description=(
+        "Elimina un favorito específico por su ID. "
+        "Requiere el header X-Session-Token del usuario dueño."
+    ),
 )
 def eliminar_favorito(
     favorito_id: int,
     session: Annotated[Session, Depends(get_session)],
+    usuario_sesion: UsuarioActual,
 ) -> None:
     """
     Elimina un favorito por ID.
 
+    Retorna 401 si falta o no sirve el token de sesión.
+    Retorna 403 si el favorito es de otro usuario.
     Retorna 404 si no existe.
     """
     favorito = session.get(Favorito, favorito_id)
@@ -186,6 +217,18 @@ def eliminar_favorito(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Favorito con id {favorito_id} no encontrado",
+        )
+
+    # Solo el dueño de la sesión puede quitar su favorito (401 ya resuelto
+    # por la dependencia del token).
+    if favorito.id_usuario != usuario_sesion.id:
+        logger.warning(
+            f"Intento de eliminar favorito ajeno: id={favorito_id}, "
+            f"sesion={usuario_sesion.id}, duenio={favorito.id_usuario}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo podés quitar favoritos de tu propio usuario",
         )
 
     session.delete(favorito)
