@@ -5,6 +5,10 @@ Endpoints bajo /api/usuarios/{id_usuario}/favoritos (usuario final):
 - GET    /api/usuarios/{id_usuario}/favoritos                    - Favoritos de un usuario
 - POST   /api/usuarios/{id_usuario}/favoritos/{id_cancion}       - Marcar favorito
 - DELETE /api/usuarios/{id_usuario}/favoritos/{id_cancion}       - Quitar favorito
+
+Los endpoints que escriben (POST y DELETE) exigen la sesión del dueño:
+viajan con el header `X-Session-Token` y fallan con 401 si falta o no sirve,
+y con 403 si el favorito es de otro usuario. El GET sigue siendo público.
 """
 
 import logging
@@ -20,6 +24,9 @@ from musica_api.models import (
     FavoritoRead,
     Usuario,
 )
+from musica_api.routers.auth import usuario_del_token
+
+UsuarioActual = Annotated[Usuario, Depends(usuario_del_token)]
 
 router = APIRouter(prefix="/api/usuarios", tags=["Favoritos Usuario"])
 logger = logging.getLogger("api_musica.favoritos_anidados")
@@ -75,18 +82,24 @@ def listar_favoritos_usuario(
     response_model=FavoritoRead,
     status_code=status.HTTP_201_CREATED,
     summary="Marcar canción como favorito",
-    description="Agrega una canción a favoritos del usuario (sin body, IDs en URL).",
+    description=(
+        "Agrega una canción a favoritos del usuario (sin body, IDs en URL). "
+        "Requiere el header X-Session-Token del usuario dueño."
+    ),
 )
 def marcar_favorito_usuario(
     usuario_id: int,
     cancion_id: int,
     session: Annotated[Session, Depends(get_session)],
+    usuario_sesion: UsuarioActual,
 ) -> FavoritoRead:
     """
     Marca una canción como favorito de un usuario.
 
     IDs vienen en la URL, no en body.
 
+    Retorna 401 si falta o no sirve el token de sesión.
+    Retorna 403 si el favorito es para otro usuario.
     Retorna 404 si usuario o canción no existen.
     Retorna 409 si ya está en favoritos.
     """
@@ -97,6 +110,17 @@ def marcar_favorito_usuario(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Usuario con id {usuario_id} no encontrado",
+        )
+
+    # El favorito solo puede marcarlo el dueño de la sesión vigente.
+    # La dependencia ya devolvió 401 si el token faltaba o no servía.
+    if usuario_id != usuario_sesion.id:
+        logger.warning(
+            f"Intento de marcar favorito ajeno: sesion={usuario_sesion.id}, usuario={usuario_id}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo podés marcar favoritos de tu propio usuario",
         )
 
     # Verificar que canción existe
@@ -135,20 +159,39 @@ def marcar_favorito_usuario(
     "/{usuario_id}/favoritos/{cancion_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Quitar canción de favoritos",
-    description="Elimina una canción de favoritos del usuario (sin body, IDs en URL).",
+    description=(
+        "Elimina una canción de favoritos del usuario (sin body, IDs en URL). "
+        "Requiere el header X-Session-Token del usuario dueño."
+    ),
 )
 def quitar_favorito_usuario(
     usuario_id: int,
     cancion_id: int,
     session: Annotated[Session, Depends(get_session)],
+    usuario_sesion: UsuarioActual,
 ) -> None:
     """
     Quita una canción de favoritos del usuario.
 
     IDs vienen en la URL.
 
+    Retorna 401 si falta o no sirve el token de sesión.
+    Retorna 403 si el favorito es de otro usuario.
     Retorna 404 si el favorito no existe.
     """
+    # Solo el dueño de la sesión puede quitar su favorito (401 ya resuelto
+    # por la dependencia del token). Se comprueba antes de la búsqueda
+    # porque esta filtra por dueño: si no, un favorito ajeno respondería
+    # 404 en lugar de 403.
+    if usuario_id != usuario_sesion.id:
+        logger.warning(
+            f"Intento de quitar favorito ajeno: sesion={usuario_sesion.id}, usuario={usuario_id}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo podés quitar favoritos de tu propio usuario",
+        )
+
     favorito = session.exec(
         select(Favorito).where(
             Favorito.id_usuario == usuario_id,

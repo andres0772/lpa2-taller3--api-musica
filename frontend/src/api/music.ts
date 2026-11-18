@@ -100,8 +100,12 @@ async function request<T>(
   }
 }
 
-function conToken(token: string | null, body?: unknown): RequestInit {
-  const init: RequestInit = { method: "POST" };
+function conToken(
+  token: string | null,
+  body?: unknown,
+  metodo = "POST",
+): RequestInit {
+  const init: RequestInit = { method: metodo };
   if (token) {
     init.headers = { "X-Session-Token": token };
   }
@@ -214,22 +218,49 @@ export function getCancion(cancionId: number): Promise<Cancion> {
   return request<Cancion>(`/api/canciones/${cancionId}`);
 }
 
+// Marcar y quitar favoritos exigen la sesión del dueño: la API responde 401
+// sin el header y 403 si el favorito es de otro usuario.
 export async function crearFavorito(
   usuarioId: number,
   cancionId: number,
+  token: string | null,
 ): Promise<Favorito> {
   return request<Favorito>(
     `/api/usuarios/${usuarioId}/favoritos/${cancionId}`,
-    { method: "POST" },
+    conToken(token),
   );
 }
 
 export async function quitarFavorito(
   usuarioId: number,
   cancionId: number,
+  token: string | null,
 ): Promise<void> {
   await request<void>(
     `/api/usuarios/${usuarioId}/favoritos/${cancionId}`,
-    { method: "DELETE" },
+    conToken(token, undefined, "DELETE"),
   );
+}
+
+// La app navega con recargas completas: los enlaces del Navbar son <a href>
+// normales, así que assign es la forma de la casa para cambiar de pantalla.
+export function irALogin(): void {
+  window.location.assign("/login");
+}
+
+// Guardar o quitar un favorito exige cuenta: es la decisión de producto del
+// taller, porque la API ahora exige la sesión del dueño. Sin sesión no se llama
+// a la API (su 401 no le dice nada al visitante) sino que se lo manda a
+// registrarse. El segundo parámetro se inyecta para poder probar la decisión
+// sin navegar de verdad; en producción es irALogin.
+export async function conSesion<T>(
+  accion: (token: string) => Promise<T>,
+  sinSesion: () => void = irALogin,
+): Promise<T | null> {
+  const token = leerToken();
+  if (!token) {
+    sinSesion();
+    return null;
+  }
+  return accion(token);
 }

@@ -8,6 +8,7 @@ import { useAudioPlayback } from "@/hooks/useAudioPlayback";
 import { anteriorCancion, siguienteCancion } from "@/utils/cola";
 import {
   audioUrl,
+  conSesion,
   getCancion,
   getFavoritos,
   getUsuario,
@@ -127,18 +128,21 @@ export default function Favorites() {
     audioRef.current?.pause();
     detenerWaveform();
 
-    try {
-      await quitarFavorito(usuarioId, selected.song.id);
-    } catch {
-      toast.error("No pudimos quitar la canción");
-      return;
-    }
+    // Sin sesión no se llega a la API: conSesion manda al registro.
+    await conSesion(async (token) => {
+      try {
+        await quitarFavorito(usuarioId, selected.song.id, token);
+      } catch {
+        toast.error("No pudimos quitar la canción");
+        return;
+      }
 
-    const remaining = tracks.filter(({ song }) => song.id !== selected.song.id);
-    setTracks(remaining);
-    setSelectedId(remaining[0]?.song.id ?? null);
-    setIsPlaying(false);
-    toast.success("Canción quitada de favoritos");
+      const remaining = tracks.filter(({ song }) => song.id !== selected.song.id);
+      setTracks(remaining);
+      setSelectedId(remaining[0]?.song.id ?? null);
+      setIsPlaying(false);
+      toast.success("Canción quitada de favoritos");
+    });
   }
 
   return (

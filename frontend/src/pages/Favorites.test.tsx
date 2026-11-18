@@ -67,9 +67,25 @@ function stubWebAudio() {
   return FakeAudioContext;
 }
 
+// El camino feliz de favoritos exige sesión: la API responde 401 sin token.
+function conSesionIniciada() {
+  localStorage.setItem("yourmusic.token", "token-de-prueba");
+  localStorage.setItem(
+    "yourmusic.usuario",
+    JSON.stringify({ id: 1, nombre: "Ana Demo", correo: "ana@example.com" }),
+  );
+}
+
 function mockFavorites(favorites: unknown[]) {
   const fetchMock = vi.fn(async (input: string | URL | Request) => {
     const url = String(input);
+    // useSesion valida el token guardado al montar.
+    if (url.includes("/api/auth/me")) {
+      return {
+        ok: true,
+        json: async () => ({ id: 1, nombre: "Ana Demo", correo: "ana@example.com" }),
+      } as Response;
+    }
     if (url.includes("/api/usuarios/1/favoritos")) {
       return { ok: true, json: async () => favorites } as Response;
     }
@@ -90,6 +106,8 @@ function mockFavorites(favorites: unknown[]) {
 describe("Favorites", () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
+    // La sesión vive en localStorage: cada test arranca sin token.
+    localStorage.clear();
   });
 
   it("marks the luminous stage as playing while audio plays", async () => {
@@ -150,6 +168,7 @@ describe("Favorites", () => {
 
   it("stops playback when the selected track changes or is removed", async () => {
     stubWebAudio();
+    conSesionIniciada();
     mockFavorites([
       {
         id: 7,
@@ -219,6 +238,7 @@ describe("Favorites", () => {
 
   it("confirms removing the selected favorite with a toast", async () => {
     stubWebAudio();
+    conSesionIniciada();
     mockFavorites([
       {
         id: 7,

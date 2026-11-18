@@ -8,6 +8,7 @@ import { anteriorCancion, siguienteCancion } from "@/utils/cola";
 import {
   audioUrl,
   buscarCanciones,
+  conSesion,
   crearFavorito,
   listCanciones,
   quitarFavorito,
@@ -137,26 +138,29 @@ export default function Explore() {
   }, [titulo, genero]);
 
   async function toggleFavorito(song: Cancion) {
-    try {
-      if (favoritas.includes(song.id)) {
-        await quitarFavorito(usuarioId, song.id);
-        setFavoritas((previas) => previas.filter((id) => id !== song.id));
-        toast.success("Canción quitada de favoritos");
-      } else {
-        await crearFavorito(usuarioId, song.id);
-        setFavoritas((previas) => [...previas, song.id]);
-        toast.success("Canción guardada en favoritos");
+    // Sin sesión no se llega a la API: conSesion manda al registro.
+    await conSesion(async (token) => {
+      try {
+        if (favoritas.includes(song.id)) {
+          await quitarFavorito(usuarioId, song.id, token);
+          setFavoritas((previas) => previas.filter((id) => id !== song.id));
+          toast.success("Canción quitada de favoritos");
+        } else {
+          await crearFavorito(usuarioId, song.id, token);
+          setFavoritas((previas) => [...previas, song.id]);
+          toast.success("Canción guardada en favoritos");
+        }
+      } catch (error) {
+        // La razón real del backend (409 = ya estaba guardada) tal cual viene.
+        const mensaje =
+          error instanceof ApiError && error.detalle
+            ? error.detalle
+            : "No pudimos actualizar favoritos";
+        toast.error(mensaje);
+      } finally {
+        setPendingFavorite(null);
       }
-    } catch (error) {
-      // La razón real del backend (409 = ya estaba guardada) tal cual viene.
-      const mensaje =
-        error instanceof ApiError && error.detalle
-          ? error.detalle
-          : "No pudimos actualizar favoritos";
-      toast.error(mensaje);
-    } finally {
-      setPendingFavorite(null);
-    }
+    });
   }
 
   async function alternarCancion(song: Cancion) {
