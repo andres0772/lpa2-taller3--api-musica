@@ -62,27 +62,62 @@ lpa2-taller3
 
 ## Instalación
 
-1. Clona este repositorio:
+Este proyecto se armó y se prueba con [uv](https://docs.astral.sh/uv/), que es el
+camino más corto. Si preferís trabajar con pip y venv, más abajo está la
+variante: las dos funcionan.
+
+> No hace falta que crees ningún archivo `.env` para arrancar: los valores por
+> defecto ya sirven para desarrollo (SQLite local en `musica.db`, puerto 8000).
+> Creá uno solo si querés cambiar algo; la tabla de configuración dice qué se
+> puede tocar.
+
+### Con uv
+
+1. Cloná el repositorio y entrá:
 
    ```bash
-   git clone https://github.com/UR-CC/lpa2-taller3.git
-   cd lpa2-taller3
+   git clone https://github.com/andres0772/lpa2-taller3--api-musica.git
+   cd lpa2-taller3--api-musica
    ```
 
-2. Crea y activa un entorno virtual:
+2. Instalá el entorno y las dependencias (uv crea el `.venv` y baja todo lo que
+   declara `pyproject.toml`):
+
+   ```bash
+   uv sync
+   ```
+
+3. Levantá la API:
+
+   ```bash
+   uv run python main.py
+   ```
+
+Con eso queda andando. La API responde en http://127.0.0.1:8000 y la
+documentación interactiva en http://127.0.0.1:8000/docs.
+
+### Con pip y venv
+
+1. Cloná el repositorio y entrá con los mismos comandos de arriba.
+
+2. Creá y activá el entorno virtual:
 
    ```bash
    python -m venv venv
    source venv/bin/activate
    ```
 
-3. Instala las dependencias:
+3. Instalá las dependencias:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Ajusta las variables de entorno, editando el archivo `.env`
+4. Levantá la API:
+
+   ```bash
+   python main.py
+   ```
 
 ## Configuración
 
@@ -104,12 +139,47 @@ aplicación falle al arrancar con un mensaje claro en lugar de fallar después.
 
 ## Ejecución
 
-1. Ejecuta la aplicación:
+Con la API levantada, estos son los sitios para entrar:
 
-   ```bash
-   uvicorn main:app --reload
-   ```
+- API: http://127.0.0.1:8000/
+- Documentación *Swagger UI*: http://127.0.0.1:8000/docs
+- Documentación *ReDoc*: http://127.0.0.1:8000/redoc
+- Estado del servicio: http://127.0.0.1:8000/health
 
+Si querés bajar el ruido de la consola, arrancá con `LOG_LEVEL=WARNING` (o
+`DEBUG` si necesitás más detalle):
+
+```bash
+LOG_LEVEL=WARNING uv run python main.py
+```
+
+## Pruebas
+
+Backend, desde la raíz del proyecto:
+
+```bash
+uv run python -m pytest
+```
+
+Usá `python -m pytest` y no `pytest` solo: el ejecutable de consola no agrega la
+carpeta del proyecto a `sys.path` y falla al importar `main`. El hook de
+pre-commit ya viene configurado con el comando correcto, así que si instalás los
+hooks (`pre-commit install`) cada commit corre las pruebas solo.
+
+Frente, desde `frontend/`:
+
+```bash
+npm ci
+npm run typecheck
+npm run lint
+npm test
+```
+
+El smoke test en Chromium necesita la API levantada en `:8000`:
+
+```bash
+npm run test:e2e
+```
 2. Accede a la aplicación:
    - API: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
    - Documentación *Swagger UI*: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
