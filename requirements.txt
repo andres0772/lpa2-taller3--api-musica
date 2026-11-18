@@ -11,6 +11,8 @@ sqlalchemy
 # Validación y utilidades
 python-multipart
 python-dotenv
+# Extra que pydantic necesita para EmailStr (los campos de correo de usuario).
+email-validator
 
 # Testing
 pytest
